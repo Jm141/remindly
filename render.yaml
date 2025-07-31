@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: remindly-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: JWT_SECRET_KEY
+        value: K8m#nP$2vL@9qR!5wX&7yZ*4cF%6hJ^3kM#8nP$2vL@9qR!5wX&7yZ*4cF%6hJ^3kM
+      - key: SECRET_KEY
+        value: H7j#kL$9mN@2pQ!6rS&8tU*5vW%1xY^4zA#7j#kL$9mN@2pQ!6rS&8tU*5vW%1xY^4zA
+      - key: FLASK_ENV
+        value: production 

@@ -22,10 +22,6 @@ app.secret_key = Config.SECRET_KEY
 app.config['ENV'] = 'production'
 app.config['DEBUG'] = False
 
-# Production configuration
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
-
 # Initialize extensions
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
