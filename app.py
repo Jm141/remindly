@@ -251,7 +251,9 @@ if __name__ == '__main__':
         print("   ✅ Interface Segregation Principle")
         print("   ✅ Dependency Inversion Principle")
         
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        # Use PORT environment variable (provided by Render) or default to 5000 for local development
+        port = int(os.environ.get('PORT', 5000))
+        app.run(host='0.0.0.0', port=port, debug=False)
     except Exception as e:
         print(f"❌ Failed to start application: {str(e)}")
         print("Stack trace:")
