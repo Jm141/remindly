@@ -18,6 +18,10 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = Config.JWT_ACCESS_TOKEN_EXPIRES
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = Config.JWT_REFRESH_TOKEN_EXPIRES
 app.secret_key = Config.SECRET_KEY
 
+# Production configuration - ensure app is ready for deployment
+app.config['ENV'] = 'production'
+app.config['DEBUG'] = False
+
 # Production configuration
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
