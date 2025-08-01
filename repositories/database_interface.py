@@ -48,21 +48,6 @@ class UserRepositoryInterface(ABC):
     def user_exists(self, username: str) -> bool:
         """Check if user exists"""
         pass
-    
-    @abstractmethod
-    def update_user(self, user: User) -> User:
-        """Update user information"""
-        pass
-    
-    @abstractmethod
-    def get_all_users(self) -> List[User]:
-        """Get all users"""
-        pass
-    
-    @abstractmethod
-    def delete_user(self, user_id: int) -> bool:
-        """Delete user by ID"""
-        pass
 
 class TaskRepositoryInterface(ABC):
     """Task repository interface following Interface Segregation Principle"""

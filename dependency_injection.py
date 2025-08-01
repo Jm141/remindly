@@ -1,7 +1,9 @@
 import sqlite3
 import os
 from pathlib import Path
-from repositories.sqlite_repository import SQLiteDatabase, SQLiteUserRepository, SQLiteTaskRepository, SQLiteSubtaskRepository
+from repositories.user_repository import UserRepository
+from repositories.task_repository import TaskRepository
+from repositories.subtask_repository import SubtaskRepository
 from services.auth_service import AuthService
 from services.task_service import TaskService
 from controllers.auth_controller import AuthController
@@ -29,25 +31,27 @@ class DependencyContainer:
             if db_dir:
                 Path(db_dir).mkdir(parents=True, exist_ok=True)
             
-            self._database = SQLiteDatabase(Config.DATABASE_PATH)
+            self._database = sqlite3.connect(Config.DATABASE_PATH)
+            self._database.row_factory = sqlite3.Row
+            self._initialize_tables()
         return self._database
     
     def get_user_repository(self):
         """Get user repository"""
         if self._user_repository is None:
-            self._user_repository = SQLiteUserRepository(self.get_database())
+            self._user_repository = UserRepository(self.get_database())
         return self._user_repository
     
     def get_task_repository(self):
         """Get task repository"""
         if self._task_repository is None:
-            self._task_repository = SQLiteTaskRepository(self.get_database(), self.get_subtask_repository())
+            self._task_repository = TaskRepository(self.get_database())
         return self._task_repository
     
     def get_subtask_repository(self):
         """Get subtask repository"""
         if self._subtask_repository is None:
-            self._subtask_repository = SQLiteSubtaskRepository(self.get_database())
+            self._subtask_repository = SubtaskRepository(self.get_database())
         return self._subtask_repository
     
     def get_auth_service(self, bcrypt):
@@ -85,6 +89,61 @@ class DependencyContainer:
                 self.get_auth_service(bcrypt)
             )
         return self._task_controller
+    
+    def _initialize_tables(self):
+        """Initialize database tables"""
+        db = self.get_database()
+        
+        # Users table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                email TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Tasks table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                due_date TIMESTAMP,
+                priority TEXT DEFAULT 'medium',
+                status TEXT DEFAULT 'pending',
+                completed BOOLEAN DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Subtasks table
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS subtasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                completed BOOLEAN DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Create indexes for better performance
+        db.execute('CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON subtasks(task_id)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)')
+        
+        db.commit()
     
     def cleanup(self):
         """Cleanup resources"""

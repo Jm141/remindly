@@ -18,11 +18,8 @@ class AuthController:
             
             username = data.get('username')
             password = data.get('password')
-            email = data.get('email', '')
-            first_name = data.get('first_name', '')
-            last_name = data.get('last_name', '')
             
-            success, message = self.auth_service.register_user(username, password, email, first_name, last_name)
+            success, message = self.auth_service.register_user(username, password)
             
             if success:
                 return jsonify({'success': True, 'message': message}), 201
@@ -85,10 +82,10 @@ class AuthController:
             return jsonify({'user': user.to_dict()}), 200
             
         except Exception as e:
-            return jsonify({'error': f'Failed to get user: {str(e)}'}), 500 
+            return jsonify({'error': f'Failed to get user: {str(e)}'}), 500
 
-    def update_user(self):
-        """Handle user information update"""
+    def update_current_user(self):
+        """Update current user information"""
         try:
             data = request.get_json()
             if not data:
@@ -98,33 +95,24 @@ class AuthController:
             if not username:
                 return jsonify({'error': 'No user identity found'}), 401
             
-            user = self.auth_service.get_user_by_username(username)
-            if not user:
-                return jsonify({'error': 'User not found'}), 404
+            new_username = data.get('username')
+            new_email = data.get('email')
             
-            email = data.get('email')
-            first_name = data.get('first_name')
-            last_name = data.get('last_name')
+            if not new_username:
+                return jsonify({'error': 'Username is required'}), 400
             
-            success, message = self.auth_service.update_user(
-                user.id, email, first_name, last_name
-            )
+            success, message = self.auth_service.update_user_info(username, new_username, new_email)
             
             if success:
-                updated_user = self.auth_service.get_user_by_id(user.id)
-                return jsonify({
-                    'success': True, 
-                    'message': message,
-                    'user': updated_user.to_dict()
-                }), 200
+                return jsonify({'success': True, 'message': message}), 200
             else:
                 return jsonify({'error': message}), 400
                 
         except Exception as e:
             return jsonify({'error': f'Update failed: {str(e)}'}), 500
-    
-    def update_password(self):
-        """Handle password update"""
+
+    def change_password(self):
+        """Change user password"""
         try:
             data = request.get_json()
             if not data:
@@ -133,10 +121,6 @@ class AuthController:
             username = get_jwt_identity()
             if not username:
                 return jsonify({'error': 'No user identity found'}), 401
-            
-            user = self.auth_service.get_user_by_username(username)
-            if not user:
-                return jsonify({'error': 'User not found'}), 404
             
             current_password = data.get('current_password')
             new_password = data.get('new_password')
@@ -144,9 +128,7 @@ class AuthController:
             if not current_password or not new_password:
                 return jsonify({'error': 'Current password and new password are required'}), 400
             
-            success, message = self.auth_service.update_password(
-                user.id, current_password, new_password
-            )
+            success, message = self.auth_service.change_password(username, current_password, new_password)
             
             if success:
                 return jsonify({'success': True, 'message': message}), 200
@@ -154,61 +136,4 @@ class AuthController:
                 return jsonify({'error': message}), 400
                 
         except Exception as e:
-            return jsonify({'error': f'Password update failed: {str(e)}'}), 500
-    
-    def update_username(self):
-        """Handle username update"""
-        try:
-            data = request.get_json()
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
-            
-            username = get_jwt_identity()
-            if not username:
-                return jsonify({'error': 'No user identity found'}), 401
-            
-            user = self.auth_service.get_user_by_username(username)
-            if not user:
-                return jsonify({'error': 'User not found'}), 404
-            
-            new_username = data.get('new_username')
-            if not new_username:
-                return jsonify({'error': 'New username is required'}), 400
-            
-            success, message = self.auth_service.update_username(user.id, new_username)
-            
-            if success:
-                updated_user = self.auth_service.get_user_by_id(user.id)
-                return jsonify({
-                    'success': True, 
-                    'message': message,
-                    'user': updated_user.to_dict()
-                }), 200
-            else:
-                return jsonify({'error': message}), 400
-                
-        except Exception as e:
-            return jsonify({'error': f'Username update failed: {str(e)}'}), 500
-    
-    def get_all_users(self):
-        """Get all users (admin function)"""
-        try:
-            users = self.auth_service.get_all_users()
-            return jsonify({
-                'users': [user.to_dict() for user in users]
-            }), 200
-        except Exception as e:
-            return jsonify({'error': f'Failed to get users: {str(e)}'}), 500
-    
-    def delete_user(self, user_id: int):
-        """Delete user (admin function)"""
-        try:
-            success, message = self.auth_service.delete_user(user_id)
-            
-            if success:
-                return jsonify({'success': True, 'message': message}), 200
-            else:
-                return jsonify({'error': message}), 400
-                
-        except Exception as e:
-            return jsonify({'error': f'Delete failed: {str(e)}'}), 500 
+            return jsonify({'error': f'Password change failed: {str(e)}'}), 500 

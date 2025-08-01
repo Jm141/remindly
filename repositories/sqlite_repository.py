@@ -63,17 +63,12 @@ class SQLiteUserRepository(UserRepositoryInterface):
         self.db.execute_update('''CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            email TEXT,
-            first_name TEXT,
-            last_name TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+            password TEXT NOT NULL)''')
     
     def create_user(self, user: User) -> User:
         """Create a new user"""
-        query = '''INSERT INTO users (username, password, email, first_name, last_name, created_at) 
-                   VALUES (?, ?, ?, ?, ?, ?)'''
-        self.db.execute_update(query, (user.username, user.password, user.email, user.first_name, user.last_name, user.created_at))
+        query = 'INSERT INTO users (username, password) VALUES (?, ?)'
+        self.db.execute_update(query, (user.username, user.password))
         
         # Get the created user with ID
         created_user = self.get_user_by_username(user.username)
@@ -81,75 +76,25 @@ class SQLiteUserRepository(UserRepositoryInterface):
     
     def get_user_by_username(self, username: str) -> Optional[User]:
         """Get user by username"""
-        query = '''SELECT id, username, password, email, first_name, last_name, created_at 
-                   FROM users WHERE username = ?'''
+        query = 'SELECT * FROM users WHERE username = ?'
         result = self.db.execute_query(query, (username,))
         if result:
             row = result[0]
-            return User(
-                id=row['id'], 
-                username=row['username'], 
-                password=row['password'],
-                email=row.get('email', ''),
-                first_name=row.get('first_name', ''),
-                last_name=row.get('last_name', ''),
-                created_at=row.get('created_at')
-            )
+            return User(id=row['id'], username=row['username'], password=row['password'])
         return None
     
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID"""
-        query = '''SELECT id, username, password, email, first_name, last_name, created_at 
-                   FROM users WHERE id = ?'''
+        query = 'SELECT * FROM users WHERE id = ?'
         result = self.db.execute_query(query, (user_id,))
         if result:
             row = result[0]
-            return User(
-                id=row['id'], 
-                username=row['username'], 
-                password=row['password'],
-                email=row.get('email', ''),
-                first_name=row.get('first_name', ''),
-                last_name=row.get('last_name', ''),
-                created_at=row.get('created_at')
-            )
+            return User(id=row['id'], username=row['username'], password=row['password'])
         return None
     
     def user_exists(self, username: str) -> bool:
         """Check if user exists"""
         return self.get_user_by_username(username) is not None
-    
-    def update_user(self, user: User) -> User:
-        """Update user information"""
-        query = '''UPDATE users 
-                   SET username = ?, email = ?, first_name = ?, last_name = ?
-                   WHERE id = ?'''
-        self.db.execute_update(query, (user.username, user.email, user.first_name, user.last_name, user.id))
-        return user
-    
-    def get_all_users(self) -> List[User]:
-        """Get all users"""
-        query = '''SELECT id, username, password, email, first_name, last_name, created_at 
-                   FROM users'''
-        result = self.db.execute_query(query)
-        users = []
-        for row in result:
-            users.append(User(
-                id=row['id'], 
-                username=row['username'], 
-                password=row['password'],
-                email=row.get('email', ''),
-                first_name=row.get('first_name', ''),
-                last_name=row.get('last_name', ''),
-                created_at=row.get('created_at')
-            ))
-        return users
-    
-    def delete_user(self, user_id: int) -> bool:
-        """Delete user by ID"""
-        query = 'DELETE FROM users WHERE id = ?'
-        affected_rows = self.db.execute_update(query, (user_id,))
-        return affected_rows > 0
 
 class SQLiteTaskRepository(TaskRepositoryInterface):
     """SQLite task repository implementation following Liskov Substitution Principle"""

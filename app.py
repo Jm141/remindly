@@ -52,11 +52,7 @@ def index():
             'register': f'{Config.API_PREFIX}/register',
             'logout': f'{Config.API_PREFIX}/logout',
             'user': f'{Config.API_PREFIX}/user',
-            'update_user': f'{Config.API_PREFIX}/user',
-            'update_password': f'{Config.API_PREFIX}/user/password',
-            'update_username': f'{Config.API_PREFIX}/user/username',
-            'all_users': f'{Config.API_PREFIX}/users',
-            'delete_user': f'{Config.API_PREFIX}/users/<user_id>',
+            'change_password': f'{Config.API_PREFIX}/change-password',
             'tasks': f'{Config.API_PREFIX}/tasks',
             'notifications': f'{Config.API_PREFIX}/notifications/due',
             'refresh': f'{Config.API_PREFIX}/refresh'
@@ -109,61 +105,27 @@ def get_current_user():
         app.logger.error(f"Get user error: {str(e)}")
         return jsonify({'error': f'Failed to get user: {str(e)}'}), 500
 
-# --- User Management Routes ---
-@app.route(f'{Config.API_PREFIX}/user', methods=['PUT', 'PATCH'])
+@app.route(f'{Config.API_PREFIX}/user', methods=['PUT'])
 @jwt_required()
-def update_user():
-    """Update user information"""
+def update_current_user():
+    """Update current user information"""
     try:
         auth_controller = container.get_auth_controller(bcrypt)
-        return auth_controller.update_user()
+        return auth_controller.update_current_user()
     except Exception as e:
         app.logger.error(f"Update user error: {str(e)}")
-        return jsonify({'error': f'Update failed: {str(e)}'}), 500
+        return jsonify({'error': f'Failed to update user: {str(e)}'}), 500
 
-@app.route(f'{Config.API_PREFIX}/user/password', methods=['PUT', 'PATCH'])
+@app.route(f'{Config.API_PREFIX}/change-password', methods=['PUT'])
 @jwt_required()
-def update_password():
-    """Update user password"""
+def change_password():
+    """Change user password"""
     try:
         auth_controller = container.get_auth_controller(bcrypt)
-        return auth_controller.update_password()
+        return auth_controller.change_password()
     except Exception as e:
-        app.logger.error(f"Update password error: {str(e)}")
-        return jsonify({'error': f'Password update failed: {str(e)}'}), 500
-
-@app.route(f'{Config.API_PREFIX}/user/username', methods=['PUT', 'PATCH'])
-@jwt_required()
-def update_username():
-    """Update username"""
-    try:
-        auth_controller = container.get_auth_controller(bcrypt)
-        return auth_controller.update_username()
-    except Exception as e:
-        app.logger.error(f"Update username error: {str(e)}")
-        return jsonify({'error': f'Username update failed: {str(e)}'}), 500
-
-@app.route(f'{Config.API_PREFIX}/users', methods=['GET'])
-@jwt_required()
-def get_all_users():
-    """Get all users (admin function)"""
-    try:
-        auth_controller = container.get_auth_controller(bcrypt)
-        return auth_controller.get_all_users()
-    except Exception as e:
-        app.logger.error(f"Get all users error: {str(e)}")
-        return jsonify({'error': f'Failed to get users: {str(e)}'}), 500
-
-@app.route(f'{Config.API_PREFIX}/users/<int:user_id>', methods=['DELETE'])
-@jwt_required()
-def delete_user(user_id):
-    """Delete user (admin function)"""
-    try:
-        auth_controller = container.get_auth_controller(bcrypt)
-        return auth_controller.delete_user(user_id)
-    except Exception as e:
-        app.logger.error(f"Delete user error: {str(e)}")
-        return jsonify({'error': f'Delete failed: {str(e)}'}), 500
+        app.logger.error(f"Change password error: {str(e)}")
+        return jsonify({'error': f'Failed to change password: {str(e)}'}), 500
 
 @app.route(f'{Config.API_PREFIX}/refresh', methods=['POST'])
 @jwt_required(refresh=True)

@@ -1,10 +1,9 @@
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token, create_refresh_token
 from models.user import User
 from repositories.database_interface import UserRepositoryInterface
 from config import Config
-from datetime import datetime
 
 class AuthService:
     """Authentication service following Single Responsibility Principle"""
@@ -13,7 +12,7 @@ class AuthService:
         self.user_repository = user_repository
         self.bcrypt = bcrypt
     
-    def register_user(self, username: str, password: str, email: str = "", first_name: str = "", last_name: str = "") -> Tuple[bool, str]:
+    def register_user(self, username: str, password: str) -> Tuple[bool, str]:
         """Register a new user"""
         # Validate input
         if not username or not password:
@@ -31,15 +30,7 @@ class AuthService:
         
         # Hash password and create user
         hashed_password = self.bcrypt.generate_password_hash(password).decode('utf-8')
-        user = User(
-            id=None, 
-            username=username, 
-            password=hashed_password,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            created_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        )
+        user = User(id=None, username=username, password_hash=hashed_password)
         
         try:
             created_user = self.user_repository.create_user(user)
@@ -56,7 +47,7 @@ class AuthService:
         if not user:
             return None, "Invalid credentials"
         
-        if not self.bcrypt.check_password_hash(user.password, password):
+        if not self.bcrypt.check_password_hash(user.password_hash, password):
             return None, "Invalid credentials"
         
         return user, "Authentication successful"
@@ -78,87 +69,77 @@ class AuthService:
     
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID"""
-        return self.user_repository.get_user_by_id(user_id) 
+        return self.user_repository.get_user_by_id(user_id)
 
-    def update_user(self, user_id: int, email: str = None, first_name: str = None, last_name: str = None) -> Tuple[bool, str]:
+    def update_user_info(self, current_username: str, new_username: str, new_email: str = None) -> Tuple[bool, str]:
         """Update user information"""
+        # Validate input
+        if not new_username:
+            return False, "Username is required"
+        
+        if len(new_username) < 3:
+            return False, "Username must be at least 3 characters"
+        
+        # Check if new username already exists (if different from current)
+        if new_username != current_username and self.user_repository.user_exists(new_username):
+            return False, "Username already exists"
+        
         try:
-            user = self.user_repository.get_user_by_id(user_id)
+            # Get current user
+            user = self.user_repository.get_user_by_username(current_username)
             if not user:
                 return False, "User not found"
             
-            # Update fields if provided
-            if email is not None:
-                user.email = email
-            if first_name is not None:
-                user.first_name = first_name
-            if last_name is not None:
-                user.last_name = last_name
+            # Update user info
+            updated_user = User(
+                id=user.id,
+                username=new_username,
+                password_hash=user.password_hash,
+                email=new_email,
+                created_at=user.created_at,
+                updated_at=None  # Will be set by repository
+            )
             
-            updated_user = self.user_repository.update_user(user)
-            return True, "User updated successfully"
+            self.user_repository.update_user_object(updated_user)
+            return True, "User information updated successfully"
+            
         except Exception as e:
             return False, f"Update failed: {str(e)}"
-    
-    def update_password(self, user_id: int, current_password: str, new_password: str) -> Tuple[bool, str]:
-        """Update user password"""
+
+    def change_password(self, username: str, current_password: str, new_password: str) -> Tuple[bool, str]:
+        """Change user password"""
+        # Validate input
+        if not current_password or not new_password:
+            return False, "Current password and new password are required"
+        
+        if len(new_password) < 6:
+            return False, "New password must be at least 6 characters"
+        
         try:
-            user = self.user_repository.get_user_by_id(user_id)
+            # Get current user
+            user = self.user_repository.get_user_by_username(username)
             if not user:
                 return False, "User not found"
             
             # Verify current password
-            if not self.bcrypt.check_password_hash(user.password, current_password):
+            if not self.bcrypt.check_password_hash(user.password_hash, current_password):
                 return False, "Current password is incorrect"
             
-            # Validate new password
-            if len(new_password) < Config.MIN_PASSWORD_LENGTH:
-                return False, f"New password must be at least {Config.MIN_PASSWORD_LENGTH} characters"
+            # Hash new password
+            new_password_hash = self.bcrypt.generate_password_hash(new_password).decode('utf-8')
             
-            # Hash and update password
-            hashed_password = self.bcrypt.generate_password_hash(new_password).decode('utf-8')
-            user.password = hashed_password
+            # Update user with new password
+            updated_user = User(
+                id=user.id,
+                username=user.username,
+                password_hash=new_password_hash,
+                email=user.email,
+                created_at=user.created_at,
+                updated_at=None  # Will be set by repository
+            )
             
-            updated_user = self.user_repository.update_user(user)
-            return True, "Password updated successfully"
+            self.user_repository.update_user_object(updated_user)
+            return True, "Password changed successfully"
+            
         except Exception as e:
-            return False, f"Password update failed: {str(e)}"
-    
-    def update_username(self, user_id: int, new_username: str) -> Tuple[bool, str]:
-        """Update username"""
-        try:
-            if len(new_username) < 3:
-                return False, "Username must be at least 3 characters"
-            
-            # Check if new username already exists
-            if self.user_repository.user_exists(new_username):
-                return False, "Username already exists"
-            
-            user = self.user_repository.get_user_by_id(user_id)
-            if not user:
-                return False, "User not found"
-            
-            user.username = new_username
-            updated_user = self.user_repository.update_user(user)
-            return True, "Username updated successfully"
-        except Exception as e:
-            return False, f"Username update failed: {str(e)}"
-    
-    def get_all_users(self) -> List[User]:
-        """Get all users (for admin purposes)"""
-        try:
-            return self.user_repository.get_all_users()
-        except Exception as e:
-            return []
-    
-    def delete_user(self, user_id: int) -> Tuple[bool, str]:
-        """Delete user"""
-        try:
-            user = self.user_repository.get_user_by_id(user_id)
-            if not user:
-                return False, "User not found"
-            
-            self.user_repository.delete_user(user_id)
-            return True, "User deleted successfully"
-        except Exception as e:
-            return False, f"Delete failed: {str(e)}" 
+            return False, f"Password change failed: {str(e)}" 

@@ -8,7 +8,10 @@ class Subtask:
     id: Optional[int]
     task_id: int
     title: str
+    description: str = ""
     completed: bool = False
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
     
     def to_dict(self) -> dict:
         """Convert subtask to dictionary"""
@@ -16,7 +19,10 @@ class Subtask:
             'id': self.id,
             'task_id': self.task_id,
             'title': self.title,
-            'completed': self.completed
+            'description': self.description,
+            'completed': self.completed,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
         }
     
     @classmethod
@@ -26,7 +32,10 @@ class Subtask:
             id=data.get('id'),
             task_id=data['task_id'],
             title=data['title'],
-            completed=data.get('completed', False)
+            description=data.get('description', ''),
+            completed=data.get('completed', False),
+            created_at=data.get('created_at'),
+            updated_at=data.get('updated_at')
         )
 
 @dataclass
@@ -40,7 +49,10 @@ class Task:
     recurrence: str = ""
     priority: str = ""
     due_date: Optional[str] = None
+    status: str = "pending"
     completed: bool = False
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
     subtasks: List[Subtask] = field(default_factory=list)
     
     def to_dict(self) -> dict:
@@ -54,7 +66,10 @@ class Task:
             'recurrence': self.recurrence,
             'priority': self.priority,
             'due_date': self.due_date,
+            'status': self.status,
             'completed': self.completed,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
             'subtasks': [subtask.to_dict() for subtask in self.subtasks]
         }
     
@@ -71,7 +86,10 @@ class Task:
             recurrence=data.get('recurrence', ''),
             priority=data.get('priority', ''),
             due_date=data.get('due_date'),
+            status=data.get('status', 'pending'),
             completed=data.get('completed', False),
+            created_at=data.get('created_at'),
+            updated_at=data.get('updated_at'),
             subtasks=subtasks
         )
     

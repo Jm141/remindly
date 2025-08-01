@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Optional, List
+from typing import Optional
 from models.user import User
 from repositories.database_interface import UserRepositoryInterface
 
@@ -14,9 +14,9 @@ class UserRepository(UserRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                INSERT INTO users (username, password, email, first_name, last_name, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (user.username, user.password, user.email, user.first_name, user.last_name, user.created_at))
+                INSERT INTO users (username, password_hash, email)
+                VALUES (?, ?, ?)
+            ''', (user.username, user.password_hash, user.email))
             
             user.id = cursor.lastrowid
             self.database.commit()
@@ -32,20 +32,19 @@ class UserRepository(UserRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                SELECT id, username, password, email, first_name, last_name, created_at
+                SELECT id, username, password_hash, email, created_at, updated_at
                 FROM users WHERE username = ?
             ''', (username,))
             
             row = cursor.fetchone()
             if row:
                 return User(
-                    id=row[0],
-                    username=row[1],
-                    password=row[2],
-                    email=row[3] or "",
-                    first_name=row[4] or "",
-                    last_name=row[5] or "",
-                    created_at=row[6]
+                    id=row['id'],
+                    username=row['username'],
+                    password_hash=row['password_hash'],
+                    email=row['email'],
+                    created_at=row['created_at'],
+                    updated_at=row['updated_at']
                 )
             return None
         except Exception as e:
@@ -56,20 +55,19 @@ class UserRepository(UserRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                SELECT id, username, password, email, first_name, last_name, created_at
+                SELECT id, username, password_hash, email, created_at, updated_at
                 FROM users WHERE id = ?
             ''', (user_id,))
             
             row = cursor.fetchone()
             if row:
                 return User(
-                    id=row[0],
-                    username=row[1],
-                    password=row[2],
-                    email=row[3] or "",
-                    first_name=row[4] or "",
-                    last_name=row[5] or "",
-                    created_at=row[6]
+                    id=row['id'],
+                    username=row['username'],
+                    password_hash=row['password_hash'],
+                    email=row['email'],
+                    created_at=row['created_at'],
+                    updated_at=row['updated_at']
                 )
             return None
         except Exception as e:
@@ -81,55 +79,49 @@ class UserRepository(UserRepositoryInterface):
             cursor = self.database.cursor()
             cursor.execute('SELECT COUNT(*) as count FROM users WHERE username = ?', (username,))
             row = cursor.fetchone()
-            return row[0] > 0
+            return row['count'] > 0
         except Exception as e:
             raise e
     
-    def update_user(self, user: User) -> User:
+    def update_user(self, user_id: int, updates: dict) -> bool:
         """Update user information"""
+        try:
+            cursor = self.database.cursor()
+            
+            # Build update query dynamically
+            set_clauses = []
+            params = []
+            
+            for key, value in updates.items():
+                if key in ['username', 'email', 'password_hash']:
+                    set_clauses.append(f"{key} = ?")
+                    params.append(value)
+            
+            if not set_clauses:
+                return False
+            
+            set_clauses.append("updated_at = CURRENT_TIMESTAMP")
+            params.append(user_id)
+            
+            query = f"UPDATE users SET {', '.join(set_clauses)} WHERE id = ?"
+            cursor.execute(query, params)
+            
+            self.database.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            self.database.rollback()
+            raise e
+
+    def update_user_object(self, user: User) -> bool:
+        """Update user information using User object"""
         try:
             cursor = self.database.cursor()
             cursor.execute('''
                 UPDATE users 
-                SET username = ?, email = ?, first_name = ?, last_name = ?
+                SET username = ?, email = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
-            ''', (user.username, user.email, user.first_name, user.last_name, user.id))
+            ''', (user.username, user.email, user.password_hash, user.id))
             
-            self.database.commit()
-            return user
-        except Exception as e:
-            self.database.rollback()
-            raise e
-    
-    def get_all_users(self) -> List[User]:
-        """Get all users"""
-        try:
-            cursor = self.database.cursor()
-            cursor.execute('''
-                SELECT id, username, password, email, first_name, last_name, created_at
-                FROM users
-            ''')
-            
-            users = []
-            for row in cursor.fetchall():
-                users.append(User(
-                    id=row[0],
-                    username=row[1],
-                    password=row[2],
-                    email=row[3] or "",
-                    first_name=row[4] or "",
-                    last_name=row[5] or "",
-                    created_at=row[6]
-                ))
-            return users
-        except Exception as e:
-            raise e
-    
-    def delete_user(self, user_id: int) -> bool:
-        """Delete user by ID"""
-        try:
-            cursor = self.database.cursor()
-            cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
             self.database.commit()
             return cursor.rowcount > 0
         except Exception as e:
