@@ -30,7 +30,7 @@ class AuthService:
         
         # Hash password and create user
         hashed_password = self.bcrypt.generate_password_hash(password).decode('utf-8')
-        user = User(id=None, username=username, password=hashed_password)
+        user = User(id=None, username=username, password_hash=hashed_password)
         
         try:
             created_user = self.user_repository.create_user(user)
@@ -47,7 +47,7 @@ class AuthService:
         if not user:
             return None, "Invalid credentials"
         
-        if not self.bcrypt.check_password_hash(user.password, password):
+        if not self.bcrypt.check_password_hash(user.password_hash, password):
             return None, "Invalid credentials"
         
         return user, "Authentication successful"
