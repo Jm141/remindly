@@ -1,0 +1,6 @@
+# SECURE KEYS FOR DEPLOYMENT
+# Keep these secure and don't share them!
+
+JWT_SECRET_KEY=K8m#nP$2vL@9qR!5wX&7yZ*4cF%6hJ^3kM#8nP$2vL@9qR!5wX&7yZ*4cF%6hJ^3kM#8nP$2vL@9qR!5wX&7yZ*4cF%6hJ^3kM
+SECRET_KEY=H7j#kL$9mN@2pQ!6rS&8tU*5vW%1xY^4zA#7j#kL$9mN@2pQ!6rS&8tU*5vW%1xY^4zA
+FLASK_ENV=production

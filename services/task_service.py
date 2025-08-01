@@ -1,16 +1,15 @@
 from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime
 from models.task import Task, Subtask
-from repositories.database_interface import TaskRepositoryInterface, SubtaskRepositoryInterface, UserRepositoryInterface
+from repositories.database_interface import TaskRepositoryInterface, SubtaskRepositoryInterface
 from config import Config
 
 class TaskService:
     """Task service following Single Responsibility Principle"""
     
-    def __init__(self, task_repository: TaskRepositoryInterface, subtask_repository: SubtaskRepositoryInterface, user_repository: UserRepositoryInterface):
+    def __init__(self, task_repository: TaskRepositoryInterface, subtask_repository: SubtaskRepositoryInterface):
         self.task_repository = task_repository
         self.subtask_repository = subtask_repository
-        self.user_repository = user_repository
     
     def create_task(self, user_id: int, task_data: Dict[str, Any]) -> Tuple[Optional[Task], str]:
         """Create a new task"""
