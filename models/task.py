@@ -1,23 +1,17 @@
 from dataclasses import dataclass, field
 from typing import Optional, List
 from datetime import datetime
-from utils.id_generator import generate_task_id, generate_subtask_id
 
 @dataclass
 class Subtask:
     """Subtask model following Single Responsibility Principle"""
-    id: Optional[str]
-    task_id: str
+    id: Optional[int]
+    task_id: int
     title: str
     description: str = ""
     completed: bool = False
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
-    
-    def __post_init__(self):
-        """Auto-generate unique ID if not provided"""
-        if self.id is None:
-            self.id = generate_subtask_id()
     
     def to_dict(self) -> dict:
         """Convert subtask to dictionary"""
@@ -47,13 +41,12 @@ class Subtask:
 @dataclass
 class Task:
     """Task model following Single Responsibility Principle"""
-    id: Optional[str]
-    user_id: str
+    id: Optional[int]
+    user_id: int
     title: str
     description: str = ""
     category: str = ""
     recurrence: str = ""
-    image_path: Optional[str] = None
     priority: str = ""
     due_date: Optional[str] = None
     status: Optional[str] = None
@@ -61,11 +54,6 @@ class Task:
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     subtasks: List[Subtask] = field(default_factory=list)
-    
-    def __post_init__(self):
-        """Auto-generate unique ID if not provided"""
-        if self.id is None:
-            self.id = generate_task_id()
     
     def to_dict(self) -> dict:
         """Convert task to dictionary"""
@@ -76,7 +64,6 @@ class Task:
             'description': self.description,
             'category': self.category,
             'recurrence': self.recurrence,
-            'image_path': self.image_path,
             'priority': self.priority,
             'due_date': self.due_date,
             'status': self.status,
@@ -97,7 +84,6 @@ class Task:
             description=data.get('description', ''),
             category=data.get('category', ''),
             recurrence=data.get('recurrence', ''),
-            image_path=data.get('image_path'),
             priority=data.get('priority', ''),
             due_date=data.get('due_date'),
             status=data.get('status'),

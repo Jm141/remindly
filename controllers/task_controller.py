@@ -10,7 +10,7 @@ class TaskController:
         self.task_service = task_service
         self.auth_service = auth_service
     
-    def _get_user_id(self) -> str:
+    def _get_user_id(self) -> int:
         """Get current user ID from JWT token"""
         username = get_jwt_identity()
         user = self.auth_service.get_user_by_username(username)
@@ -55,7 +55,7 @@ class TaskController:
         except Exception as e:
             return jsonify({'error': f'Failed to create task: {str(e)}'}), 500
     
-    def update_task(self, task_id: str):
+    def update_task(self, task_id: int):
         """Update a task"""
         try:
             user_id = self._get_user_id()
@@ -76,7 +76,7 @@ class TaskController:
         except Exception as e:
             return jsonify({'error': f'Failed to update task: {str(e)}'}), 500
     
-    def delete_task(self, task_id: str):
+    def delete_task(self, task_id: int):
         """Delete a task"""
         try:
             user_id = self._get_user_id()
@@ -93,7 +93,7 @@ class TaskController:
         except Exception as e:
             return jsonify({'error': f'Failed to delete task: {str(e)}'}), 500
     
-    def get_subtasks(self, task_id: str):
+    def get_subtasks(self, task_id: int):
         """Get subtasks for a task"""
         try:
             user_id = self._get_user_id()
@@ -110,7 +110,7 @@ class TaskController:
         except Exception as e:
             return jsonify({'error': f'Failed to get subtasks: {str(e)}'}), 500
     
-    def create_subtask(self, task_id: str):
+    def create_subtask(self, task_id: int):
         """Create a new subtask"""
         try:
             user_id = self._get_user_id()
@@ -131,7 +131,7 @@ class TaskController:
         except Exception as e:
             return jsonify({'error': f'Failed to create subtask: {str(e)}'}), 500
     
-    def update_subtask(self, task_id: str, subtask_id: str):
+    def update_subtask(self, task_id: int, subtask_id: int):
         """Update a subtask"""
         try:
             user_id = self._get_user_id()
@@ -152,7 +152,7 @@ class TaskController:
         except Exception as e:
             return jsonify({'error': f'Failed to update subtask: {str(e)}'}), 500
     
-    def delete_subtask(self, task_id: str, subtask_id: str):
+    def delete_subtask(self, task_id: int, subtask_id: int):
         """Delete a subtask"""
         try:
             user_id = self._get_user_id()

@@ -128,7 +128,7 @@ class DependencyContainer:
         # Users table
         db.execute('''
             CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 email TEXT,
@@ -140,13 +140,10 @@ class DependencyContainer:
         # Tasks table
         db.execute('''
             CREATE TABLE IF NOT EXISTS tasks (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
                 title TEXT NOT NULL,
                 description TEXT,
-                category TEXT DEFAULT 'Work',
-                recurrence TEXT DEFAULT 'None',
-                image_path TEXT,
                 due_date TIMESTAMP,
                 priority TEXT DEFAULT 'medium',
                 status TEXT,
@@ -168,21 +165,6 @@ class DependencyContainer:
         except:
             pass  # Column already exists
         
-        try:
-            db.execute('ALTER TABLE tasks ADD COLUMN category TEXT DEFAULT "Work"')
-        except:
-            pass  # Column already exists
-        
-        try:
-            db.execute('ALTER TABLE tasks ADD COLUMN recurrence TEXT DEFAULT "None"')
-        except:
-            pass  # Column already exists
-        
-        try:
-            db.execute('ALTER TABLE tasks ADD COLUMN image_path TEXT')
-        except:
-            pass  # Column already exists
-        
         # Update existing tasks with "pending" status to NULL
         try:
             db.execute('UPDATE tasks SET status = NULL WHERE status = "pending"')
@@ -192,8 +174,8 @@ class DependencyContainer:
         # Subtasks table
         db.execute('''
             CREATE TABLE IF NOT EXISTS subtasks (
-                id TEXT PRIMARY KEY,
-                task_id TEXT NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER NOT NULL,
                 title TEXT NOT NULL,
                 description TEXT,
                 completed BOOLEAN DEFAULT 0,
@@ -211,10 +193,10 @@ class DependencyContainer:
         # Task sharing table for collaboration
         db.execute('''
             CREATE TABLE IF NOT EXISTS task_shares (
-                id TEXT PRIMARY KEY,
-                task_id TEXT NOT NULL,
-                owner_id TEXT NOT NULL,
-                shared_with_id TEXT NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER NOT NULL,
+                owner_id INTEGER NOT NULL,
+                shared_with_id INTEGER NOT NULL,
                 permission_level TEXT DEFAULT 'view', -- 'view', 'edit', 'admin'
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

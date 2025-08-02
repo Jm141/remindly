@@ -16,33 +16,34 @@ class TaskRepository(TaskRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                INSERT INTO tasks (id, user_id, title, description, category, recurrence, image_path, due_date, priority, status, completed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO tasks (user_id, title, description, due_date, priority, status, completed)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
-                task.id, task.user_id, task.title, task.description, task.category, task.recurrence, task.image_path,
-                task.due_date, task.priority, task.status, task.completed
+                task.user_id, task.title, task.description, task.due_date,
+                task.priority, task.status, task.completed
             ))
             
+            task.id = cursor.lastrowid
             self.database.commit()
             return task
         except Exception as e:
             self.database.rollback()
             raise e
     
-    def get_tasks_by_user(self, user_id: str, completed: Optional[bool] = None) -> List[Task]:
+    def get_tasks_by_user(self, user_id: int, completed: Optional[bool] = None) -> List[Task]:
         """Get tasks for a user"""
         try:
             cursor = self.database.cursor()
             
             if completed is not None:
                 cursor.execute('''
-                    SELECT id, user_id, title, description, category, recurrence, image_path, due_date, priority, status, completed, created_at, updated_at
+                    SELECT id, user_id, title, description, due_date, priority, status, completed, created_at, updated_at
                     FROM tasks WHERE user_id = ? AND completed = ?
                     ORDER BY created_at DESC
                 ''', (user_id, completed))
             else:
                 cursor.execute('''
-                    SELECT id, user_id, title, description, category, recurrence, image_path, due_date, priority, status, completed, created_at, updated_at
+                    SELECT id, user_id, title, description, due_date, priority, status, completed, created_at, updated_at
                     FROM tasks WHERE user_id = ?
                     ORDER BY created_at DESC
                 ''', (user_id,))
@@ -55,9 +56,6 @@ class TaskRepository(TaskRepositoryInterface):
                     user_id=row['user_id'],
                     title=row['title'],
                     description=row['description'],
-                    category=row['category'],
-                    recurrence=row['recurrence'],
-                    image_path=row['image_path'],
                     due_date=row['due_date'],
                     priority=row['priority'],
                     status=row['status'],
@@ -69,12 +67,12 @@ class TaskRepository(TaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_task_by_id(self, task_id: str, user_id: str) -> Optional[Task]:
+    def get_task_by_id(self, task_id: int, user_id: int) -> Optional[Task]:
         """Get task by ID for a specific user"""
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                SELECT id, user_id, title, description, category, recurrence, image_path, due_date, priority, status, completed, created_at, updated_at
+                SELECT id, user_id, title, description, due_date, priority, status, completed, created_at, updated_at
                 FROM tasks WHERE id = ? AND user_id = ?
             ''', (task_id, user_id))
             
@@ -85,9 +83,6 @@ class TaskRepository(TaskRepositoryInterface):
                     user_id=row['user_id'],
                     title=row['title'],
                     description=row['description'],
-                    category=row['category'],
-                    recurrence=row['recurrence'],
-                    image_path=row['image_path'],
                     due_date=row['due_date'],
                     priority=row['priority'],
                     status=row['status'],
@@ -99,12 +94,12 @@ class TaskRepository(TaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_task_by_id_only(self, task_id: str) -> Optional[Task]:
+    def get_task_by_id_only(self, task_id: int) -> Optional[Task]:
         """Get task by ID without user restriction (for task sharing)"""
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                SELECT id, user_id, title, description, category, recurrence, image_path, due_date, priority, status, completed, created_at, updated_at
+                SELECT id, user_id, title, description, due_date, priority, status, completed, created_at, updated_at
                 FROM tasks WHERE id = ?
             ''', (task_id,))
             
@@ -115,9 +110,6 @@ class TaskRepository(TaskRepositoryInterface):
                     user_id=row['user_id'],
                     title=row['title'],
                     description=row['description'],
-                    category=row['category'],
-                    recurrence=row['recurrence'],
-                    image_path=row['image_path'],
                     due_date=row['due_date'],
                     priority=row['priority'],
                     status=row['status'],
@@ -129,11 +121,7 @@ class TaskRepository(TaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_task_by_id(self, task_id: str) -> Optional[Task]:
-        """Get task by ID without user restriction (alias for get_task_by_id_only)"""
-        return self.get_task_by_id_only(task_id)
-    
-    def update_task(self, task_id: str, user_id: str, updates: Dict[str, Any]) -> bool:
+    def update_task(self, task_id: int, user_id: int, updates: Dict[str, Any]) -> bool:
         """Update a task"""
         try:
             cursor = self.database.cursor()
@@ -143,7 +131,7 @@ class TaskRepository(TaskRepositoryInterface):
             params = []
             
             for key, value in updates.items():
-                if key in ['title', 'description', 'category', 'recurrence', 'image_path', 'due_date', 'priority', 'status', 'completed']:
+                if key in ['title', 'description', 'due_date', 'priority', 'status', 'completed']:
                     set_clauses.append(f"{key} = ?")
                     params.append(value)
             
@@ -162,7 +150,7 @@ class TaskRepository(TaskRepositoryInterface):
             self.database.rollback()
             raise e
     
-    def delete_task(self, task_id: str, user_id: str) -> bool:
+    def delete_task(self, task_id: int, user_id: int) -> bool:
         """Delete a task"""
         try:
             cursor = self.database.cursor()
@@ -173,14 +161,14 @@ class TaskRepository(TaskRepositoryInterface):
             self.database.rollback()
             raise e
     
-    def get_tasks_due_soon(self, user_id: str, hours: int = 1) -> List[Task]:
+    def get_tasks_due_soon(self, user_id: int, hours: int = 1) -> List[Task]:
         """Get tasks due within specified hours"""
         try:
             cursor = self.database.cursor()
             due_time = datetime.now() + timedelta(hours=hours)
             
             cursor.execute('''
-                SELECT id, user_id, title, description, category, recurrence, image_path, due_date, priority, status, completed, created_at, updated_at
+                SELECT id, user_id, title, description, due_date, priority, status, completed, created_at, updated_at
                 FROM tasks 
                 WHERE user_id = ? AND due_date <= ? AND completed = 0
                 ORDER BY due_date ASC
@@ -194,9 +182,6 @@ class TaskRepository(TaskRepositoryInterface):
                     user_id=row['user_id'],
                     title=row['title'],
                     description=row['description'],
-                    category=row['category'],
-                    recurrence=row['recurrence'],
-                    image_path=row['image_path'],
                     due_date=row['due_date'],
                     priority=row['priority'],
                     status=row['status'],
@@ -208,14 +193,14 @@ class TaskRepository(TaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_overdue_tasks(self, user_id: str) -> List[Task]:
+    def get_overdue_tasks(self, user_id: int) -> List[Task]:
         """Get overdue tasks for a user"""
         try:
             cursor = self.database.cursor()
             now = datetime.now()
             
             cursor.execute('''
-                SELECT id, user_id, title, description, category, recurrence, image_path, due_date, priority, status, completed, created_at, updated_at
+                SELECT id, user_id, title, description, due_date, priority, status, completed, created_at, updated_at
                 FROM tasks 
                 WHERE user_id = ? AND due_date < ? AND completed = 0
                 ORDER BY due_date ASC
@@ -229,9 +214,6 @@ class TaskRepository(TaskRepositoryInterface):
                     user_id=row['user_id'],
                     title=row['title'],
                     description=row['description'],
-                    category=row['category'],
-                    recurrence=row['recurrence'],
-                    image_path=row['image_path'],
                     due_date=row['due_date'],
                     priority=row['priority'],
                     status=row['status'],

@@ -1,23 +1,17 @@
 from dataclasses import dataclass
 from typing import Optional
 from datetime import datetime
-from utils.id_generator import generate_share_id
 
 @dataclass
 class TaskShare:
     """Task sharing model for collaboration"""
-    id: Optional[str]
-    task_id: str
-    owner_id: str
-    shared_with_id: str
+    id: Optional[int]
+    task_id: int
+    owner_id: int
+    shared_with_id: int
     permission_level: str = "view"  # 'view', 'edit', 'admin'
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
-    
-    def __post_init__(self):
-        """Auto-generate unique ID if not provided"""
-        if self.id is None:
-            self.id = generate_share_id()
     
     def to_dict(self) -> dict:
         """Convert task share to dictionary"""

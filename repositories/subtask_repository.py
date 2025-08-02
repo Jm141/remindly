@@ -14,17 +14,18 @@ class SubtaskRepository(SubtaskRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                INSERT INTO subtasks (id, task_id, title, description, completed)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (subtask.id, subtask.task_id, subtask.title, subtask.description, subtask.completed))
+                INSERT INTO subtasks (task_id, title, description, completed)
+                VALUES (?, ?, ?, ?)
+            ''', (subtask.task_id, subtask.title, subtask.description, subtask.completed))
             
+            subtask.id = cursor.lastrowid
             self.database.commit()
             return subtask
         except Exception as e:
             self.database.rollback()
             raise e
     
-    def get_subtasks_by_task(self, task_id: str) -> List[Subtask]:
+    def get_subtasks_by_task(self, task_id: int) -> List[Subtask]:
         """Get subtasks for a task"""
         try:
             cursor = self.database.cursor()
@@ -50,7 +51,7 @@ class SubtaskRepository(SubtaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_subtask_by_id(self, subtask_id: str, task_id: str) -> Optional[Subtask]:
+    def get_subtask_by_id(self, subtask_id: int, task_id: int) -> Optional[Subtask]:
         """Get subtask by ID for a specific task"""
         try:
             cursor = self.database.cursor()
@@ -74,7 +75,7 @@ class SubtaskRepository(SubtaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def update_subtask(self, subtask_id: str, task_id: str, updates: Dict[str, Any]) -> bool:
+    def update_subtask(self, subtask_id: int, task_id: int, updates: Dict[str, Any]) -> bool:
         """Update a subtask"""
         try:
             cursor = self.database.cursor()
@@ -103,7 +104,7 @@ class SubtaskRepository(SubtaskRepositoryInterface):
             self.database.rollback()
             raise e
     
-    def delete_subtask(self, subtask_id: str, task_id: str) -> bool:
+    def delete_subtask(self, subtask_id: int, task_id: int) -> bool:
         """Delete a subtask"""
         try:
             cursor = self.database.cursor()
@@ -114,21 +115,31 @@ class SubtaskRepository(SubtaskRepositoryInterface):
             self.database.rollback()
             raise e
     
-    def get_completed_subtasks_count(self, task_id: str) -> int:
+    def get_completed_subtasks_count(self, task_id: int) -> int:
         """Get count of completed subtasks for a task"""
         try:
             cursor = self.database.cursor()
-            cursor.execute('SELECT COUNT(*) as count FROM subtasks WHERE task_id = ? AND completed = 1', (task_id,))
+            cursor.execute('''
+                SELECT COUNT(*) as count 
+                FROM subtasks 
+                WHERE task_id = ? AND completed = 1
+            ''', (task_id,))
+            
             row = cursor.fetchone()
             return row['count']
         except Exception as e:
             raise e
     
-    def get_total_subtasks_count(self, task_id: str) -> int:
+    def get_total_subtasks_count(self, task_id: int) -> int:
         """Get total count of subtasks for a task"""
         try:
             cursor = self.database.cursor()
-            cursor.execute('SELECT COUNT(*) as count FROM subtasks WHERE task_id = ?', (task_id,))
+            cursor.execute('''
+                SELECT COUNT(*) as count 
+                FROM subtasks 
+                WHERE task_id = ?
+            ''', (task_id,))
+            
             row = cursor.fetchone()
             return row['count']
         except Exception as e:
