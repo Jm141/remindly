@@ -209,7 +209,7 @@ def notifications():
     """Get due notifications endpoint"""
     try:
         task_controller = container.get_task_controller(bcrypt)
-        return task_controller.get_due_notifications()
+        return task_controller.get_notifications()
     except Exception as e:
         app.logger.error(f"Notifications error: {str(e)}")
         app.logger.error(traceback.format_exc())
