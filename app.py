@@ -156,7 +156,7 @@ def tasks():
         app.logger.error(f"Tasks error: {str(e)}")
         return jsonify({'error': f'Task operation failed: {str(e)}'}), 500
 
-@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>', methods=['PUT', 'PATCH', 'DELETE'])
+@app.route(f'{Config.API_PREFIX}/tasks/<string:task_id>', methods=['PUT', 'PATCH', 'DELETE'])
 @jwt_required()
 def task_operations(task_id):
     """Task operations endpoint - PUT/PATCH: update task, DELETE: delete task"""
@@ -172,7 +172,7 @@ def task_operations(task_id):
         return jsonify({'error': f'Task operation failed: {str(e)}'}), 500
 
 # --- Subtask Routes ---
-@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>/subtasks', methods=['GET', 'POST'])
+@app.route(f'{Config.API_PREFIX}/tasks/<string:task_id>/subtasks', methods=['GET', 'POST'])
 @jwt_required()
 def subtasks(task_id):
     """Subtasks endpoint - GET: retrieve subtasks, POST: create subtask"""
@@ -187,7 +187,7 @@ def subtasks(task_id):
         app.logger.error(f"Subtask error: {str(e)}")
         return jsonify({'error': f'Subtask operation failed: {str(e)}'}), 500
 
-@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>/subtasks/<int:subtask_id>', methods=['PUT', 'PATCH', 'DELETE'])
+@app.route(f'{Config.API_PREFIX}/tasks/<string:task_id>/subtasks/<string:subtask_id>', methods=['PUT', 'PATCH', 'DELETE'])
 @jwt_required()
 def subtask_operations(task_id, subtask_id):
     """Subtask operations endpoint - PUT/PATCH: update subtask, DELETE: delete subtask"""
@@ -240,7 +240,7 @@ def get_shared_tasks():
         app.logger.error(traceback.format_exc())
         return jsonify({'error': f'Failed to get shared tasks: {str(e)}'}), 500
 
-@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>/shares', methods=['GET'])
+@app.route(f'{Config.API_PREFIX}/tasks/<string:task_id>/shares', methods=['GET'])
 @jwt_required()
 def get_task_shares(task_id):
     """Get all shares for a specific task (owner only)"""
@@ -252,7 +252,7 @@ def get_task_shares(task_id):
         app.logger.error(traceback.format_exc())
         return jsonify({'error': f'Failed to get task shares: {str(e)}'}), 500
 
-@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>/shares/permission', methods=['PUT'])
+@app.route(f'{Config.API_PREFIX}/tasks/<string:task_id>/shares/permission', methods=['PUT'])
 @jwt_required()
 def update_share_permission(task_id):
     """Update permission level for a shared task"""
@@ -264,7 +264,7 @@ def update_share_permission(task_id):
         app.logger.error(traceback.format_exc())
         return jsonify({'error': f'Failed to update permission: {str(e)}'}), 500
 
-@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>/shares', methods=['DELETE'])
+@app.route(f'{Config.API_PREFIX}/tasks/<string:task_id>/shares', methods=['DELETE'])
 @jwt_required()
 def remove_share(task_id):
     """Remove a task share"""

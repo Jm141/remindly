@@ -16,21 +16,20 @@ class TaskRepository(TaskRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                INSERT INTO tasks (user_id, title, description, due_date, priority, status, completed)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO tasks (id, user_id, title, description, due_date, priority, status, completed)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
-                task.user_id, task.title, task.description, task.due_date,
+                task.id, task.user_id, task.title, task.description, task.due_date,
                 task.priority, task.status, task.completed
             ))
             
-            task.id = cursor.lastrowid
             self.database.commit()
             return task
         except Exception as e:
             self.database.rollback()
             raise e
     
-    def get_tasks_by_user(self, user_id: int, completed: Optional[bool] = None) -> List[Task]:
+    def get_tasks_by_user(self, user_id: str, completed: Optional[bool] = None) -> List[Task]:
         """Get tasks for a user"""
         try:
             cursor = self.database.cursor()
@@ -67,7 +66,7 @@ class TaskRepository(TaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_task_by_id(self, task_id: int, user_id: int) -> Optional[Task]:
+    def get_task_by_id(self, task_id: str, user_id: str) -> Optional[Task]:
         """Get task by ID for a specific user"""
         try:
             cursor = self.database.cursor()
@@ -94,7 +93,7 @@ class TaskRepository(TaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_task_by_id_only(self, task_id: int) -> Optional[Task]:
+    def get_task_by_id_only(self, task_id: str) -> Optional[Task]:
         """Get task by ID without user restriction (for task sharing)"""
         try:
             cursor = self.database.cursor()
@@ -121,7 +120,7 @@ class TaskRepository(TaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def update_task(self, task_id: int, user_id: int, updates: Dict[str, Any]) -> bool:
+    def update_task(self, task_id: str, user_id: str, updates: Dict[str, Any]) -> bool:
         """Update a task"""
         try:
             cursor = self.database.cursor()
@@ -150,7 +149,7 @@ class TaskRepository(TaskRepositoryInterface):
             self.database.rollback()
             raise e
     
-    def delete_task(self, task_id: int, user_id: int) -> bool:
+    def delete_task(self, task_id: str, user_id: str) -> bool:
         """Delete a task"""
         try:
             cursor = self.database.cursor()
@@ -161,7 +160,7 @@ class TaskRepository(TaskRepositoryInterface):
             self.database.rollback()
             raise e
     
-    def get_tasks_due_soon(self, user_id: int, hours: int = 1) -> List[Task]:
+    def get_tasks_due_soon(self, user_id: str, hours: int = 1) -> List[Task]:
         """Get tasks due within specified hours"""
         try:
             cursor = self.database.cursor()
@@ -193,7 +192,7 @@ class TaskRepository(TaskRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_overdue_tasks(self, user_id: int) -> List[Task]:
+    def get_overdue_tasks(self, user_id: str) -> List[Task]:
         """Get overdue tasks for a user"""
         try:
             cursor = self.database.cursor()

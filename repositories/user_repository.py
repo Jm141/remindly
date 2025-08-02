@@ -50,7 +50,7 @@ class UserRepository(UserRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_user_by_id(self, user_id: int) -> Optional[User]:
+    def get_user_by_id(self, user_id: str) -> Optional[User]:
         """Get user by ID"""
         try:
             cursor = self.database.cursor()

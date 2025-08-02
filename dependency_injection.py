@@ -128,7 +128,7 @@ class DependencyContainer:
         # Users table
         db.execute('''
             CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 email TEXT,
@@ -140,8 +140,8 @@ class DependencyContainer:
         # Tasks table
         db.execute('''
             CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
                 title TEXT NOT NULL,
                 description TEXT,
                 due_date TIMESTAMP,
@@ -174,8 +174,8 @@ class DependencyContainer:
         # Subtasks table
         db.execute('''
             CREATE TABLE IF NOT EXISTS subtasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                task_id INTEGER NOT NULL,
+                id TEXT PRIMARY KEY,
+                task_id TEXT NOT NULL,
                 title TEXT NOT NULL,
                 description TEXT,
                 completed BOOLEAN DEFAULT 0,
@@ -193,10 +193,10 @@ class DependencyContainer:
         # Task sharing table for collaboration
         db.execute('''
             CREATE TABLE IF NOT EXISTS task_shares (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                task_id INTEGER NOT NULL,
-                owner_id INTEGER NOT NULL,
-                shared_with_id INTEGER NOT NULL,
+                id TEXT PRIMARY KEY,
+                task_id TEXT NOT NULL,
+                owner_id TEXT NOT NULL,
+                shared_with_id TEXT NOT NULL,
                 permission_level TEXT DEFAULT 'view', -- 'view', 'edit', 'admin'
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

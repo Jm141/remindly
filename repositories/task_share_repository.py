@@ -85,7 +85,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
             self.db.rollback()
             raise e
     
-    def get_shares_by_task(self, task_id: int) -> List[TaskShare]:
+    def get_shares_by_task(self, task_id: str) -> List[TaskShare]:
         """Get all shares for a specific task"""
         try:
             cursor = self.db.cursor()
@@ -95,7 +95,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_shares_by_user(self, user_id: int) -> List[TaskShare]:
+    def get_shares_by_user(self, user_id: str) -> List[TaskShare]:
         """Get all tasks shared with a user"""
         try:
             cursor = self.db.cursor()
@@ -105,7 +105,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_shared_tasks_for_user(self, user_id: int) -> List[int]:
+    def get_shared_tasks_for_user(self, user_id: str) -> List[str]:
         """Get list of task IDs shared with a user"""
         try:
             cursor = self.db.cursor()
@@ -115,7 +115,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
         except Exception as e:
             raise e
     
-    def get_share_permission(self, task_id: int, user_id: int) -> Optional[str]:
+    def get_share_permission(self, task_id: str, user_id: str) -> Optional[str]:
         """Get permission level for a user on a specific task"""
         try:
             cursor = self.db.cursor()
@@ -127,7 +127,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
         except Exception as e:
             raise e
     
-    def update_share_permission(self, task_id: int, shared_with_id: int, permission_level: str) -> bool:
+    def update_share_permission(self, task_id: str, shared_with_id: str, permission_level: str) -> bool:
         """Update permission level for a task share"""
         try:
             cursor = self.db.cursor()
@@ -140,7 +140,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
             self.db.rollback()
             raise e
     
-    def delete_share(self, task_id: int, shared_with_id: int) -> bool:
+    def delete_share(self, task_id: str, shared_with_id: str) -> bool:
         """Delete a task share"""
         try:
             cursor = self.db.cursor()
@@ -151,7 +151,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
             self.db.rollback()
             raise e
     
-    def delete_all_shares_for_task(self, task_id: int) -> bool:
+    def delete_all_shares_for_task(self, task_id: str) -> bool:
         """Delete all shares for a specific task"""
         try:
             cursor = self.db.cursor()
@@ -162,7 +162,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
             self.db.rollback()
             raise e
     
-    def _get_share_by_task_and_user(self, task_id: int, shared_with_id: int) -> TaskShare:
+    def _get_share_by_task_and_user(self, task_id: str, shared_with_id: str) -> TaskShare:
         """Get share by task ID and shared user ID"""
         try:
             cursor = self.db.cursor()
