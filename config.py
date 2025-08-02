@@ -9,8 +9,8 @@ class Config:
     
     # JWT Configuration
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your_jwt_secret_key')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=30)
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=30)  # Monthly access tokens
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=365)  # Yearly refresh tokens
     
     # Flask Configuration
     SECRET_KEY = os.environ.get('SECRET_KEY', 'secret_key')
