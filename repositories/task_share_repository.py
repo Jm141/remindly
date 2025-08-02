@@ -183,11 +183,5 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
             shared_with_id=row['shared_with_id'],
             permission_level=row['permission_level'],
             created_at=row['created_at'],
-            id=row[0],
-            task_id=row[1],
-            owner_id=row[2],
-            shared_with_id=row[3],
-            permission_level=row[4],
-            created_at=row[5],
-            updated_at=row[6]
+            updated_at=row['updated_at']
         ) 
