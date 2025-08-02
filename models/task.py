@@ -49,7 +49,7 @@ class Task:
     recurrence: str = ""
     priority: str = ""
     due_date: Optional[str] = None
-    status: str = "pending"
+    status: Optional[str] = None
     completed: bool = False
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
@@ -86,7 +86,7 @@ class Task:
             recurrence=data.get('recurrence', ''),
             priority=data.get('priority', ''),
             due_date=data.get('due_date'),
-            status=data.get('status', 'pending'),
+            status=data.get('status'),
             completed=data.get('completed', False),
             created_at=data.get('created_at'),
             updated_at=data.get('updated_at'),

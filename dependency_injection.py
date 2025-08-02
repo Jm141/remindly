@@ -146,13 +146,30 @@ class DependencyContainer:
                 description TEXT,
                 due_date TIMESTAMP,
                 priority TEXT DEFAULT 'medium',
-                status TEXT DEFAULT 'pending',
+                status TEXT,
                 completed BOOLEAN DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
             )
         ''')
+        
+        # Add missing columns to existing tasks table if they don't exist
+        try:
+            db.execute('ALTER TABLE tasks ADD COLUMN status TEXT')
+        except:
+            pass  # Column already exists
+        
+        try:
+            db.execute('ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT "medium"')
+        except:
+            pass  # Column already exists
+        
+        # Update existing tasks with "pending" status to NULL
+        try:
+            db.execute('UPDATE tasks SET status = NULL WHERE status = "pending"')
+        except:
+            pass  # No tasks to update or column doesn't exist
         
         # Subtasks table
         db.execute('''
