@@ -276,6 +276,42 @@ def remove_share(task_id):
         app.logger.error(traceback.format_exc())
         return jsonify({'error': f'Failed to remove share: {str(e)}'}), 500
 
+@app.route(f'{Config.API_PREFIX}/users', methods=['GET'])
+def get_all_users():
+    """Get all users (for testing purposes)"""
+    try:
+        user_repo = container.get_user_repository()
+        database = container.get_database()
+        
+        # Fetch all users using direct query
+        cursor = database.cursor()
+        cursor.execute('''
+            SELECT id, username
+            FROM users
+            ORDER BY id DESC
+        ''')
+        
+        users = cursor.fetchall()
+        
+        # Convert to list of dictionaries
+        user_list = []
+        for user_data in users:
+            user_list.append({
+                'id': user_data['id'],
+                'username': user_data['username']
+            })
+        
+        return jsonify({
+            'users': user_list,
+            'count': len(user_list),
+            'message': f'Successfully fetched {len(user_list)} users'
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Get all users error: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': f'Failed to fetch users: {str(e)}'}), 500
+
 # --- Error Handlers ---
 @app.errorhandler(404)
 def not_found(error):
