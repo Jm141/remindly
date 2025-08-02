@@ -73,6 +73,11 @@ class TaskRepositoryInterface(ABC):
         pass
     
     @abstractmethod
+    def get_task_by_id(self, task_id: str) -> Optional[Task]:
+        """Get task by ID without user restriction (alias for get_task_by_id_only)"""
+        pass
+    
+    @abstractmethod
     def update_task(self, task_id: str, user_id: str, updates: Dict[str, Any]) -> bool:
         """Update a task"""
         pass

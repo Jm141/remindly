@@ -16,7 +16,7 @@ class TaskShareService:
         self.task_repo = task_repo
         self.user_repo = user_repo
     
-    def share_task(self, task_id: int, owner_id: int, username: str, permission_level: str = "view") -> Tuple[bool, str]:
+    def share_task(self, task_id: str, owner_id: str, username: str, permission_level: str = "view") -> Tuple[bool, str]:
         """Share a task with another user by username"""
         try:
             # Validate permission level
@@ -59,7 +59,7 @@ class TaskShareService:
         except Exception as e:
             return False, f"Failed to share task: {str(e)}"
     
-    def get_shared_tasks(self, user_id: int) -> List[Task]:
+    def get_shared_tasks(self, user_id: str) -> List[Task]:
         """Get all tasks shared with a user"""
         try:
             shared_task_ids = self.task_share_repo.get_shared_tasks_for_user(user_id)
@@ -76,7 +76,7 @@ class TaskShareService:
             print(f"Error getting shared tasks: {e}")
             return []
     
-    def get_task_shares(self, task_id: int, owner_id: int) -> List[dict]:
+    def get_task_shares(self, task_id: str, owner_id: str) -> List[dict]:
         """Get all shares for a specific task (owner only)"""
         try:
             # Verify ownership
@@ -103,7 +103,7 @@ class TaskShareService:
             print(f"Error getting task shares: {e}")
             return []
     
-    def update_share_permission(self, task_id: int, owner_id: int, username: str, permission_level: str) -> Tuple[bool, str]:
+    def update_share_permission(self, task_id: str, owner_id: str, username: str, permission_level: str) -> Tuple[bool, str]:
         """Update permission level for a shared task"""
         try:
             # Validate permission level
@@ -132,7 +132,7 @@ class TaskShareService:
         except Exception as e:
             return False, f"Failed to update permission: {str(e)}"
     
-    def remove_share(self, task_id: int, owner_id: int, username: str) -> Tuple[bool, str]:
+    def remove_share(self, task_id: str, owner_id: str, username: str) -> Tuple[bool, str]:
         """Remove a task share"""
         try:
             # Verify ownership
@@ -152,7 +152,7 @@ class TaskShareService:
         except Exception as e:
             return False, f"Failed to remove share: {str(e)}"
     
-    def can_user_access_task(self, task_id: int, user_id: int) -> bool:
+    def can_user_access_task(self, task_id: str, user_id: str) -> bool:
         """Check if user can access a task (owner or shared)"""
         try:
             # Check if user owns the task
@@ -168,7 +168,7 @@ class TaskShareService:
             print(f"Error checking task access: {e}")
             return False
     
-    def can_user_edit_task(self, task_id: int, user_id: int) -> bool:
+    def can_user_edit_task(self, task_id: str, user_id: str) -> bool:
         """Check if user can edit a task"""
         try:
             # Check if user owns the task

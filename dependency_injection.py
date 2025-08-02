@@ -144,6 +144,9 @@ class DependencyContainer:
                 user_id TEXT NOT NULL,
                 title TEXT NOT NULL,
                 description TEXT,
+                category TEXT DEFAULT 'Work',
+                recurrence TEXT DEFAULT 'None',
+                image_path TEXT,
                 due_date TIMESTAMP,
                 priority TEXT DEFAULT 'medium',
                 status TEXT,
@@ -162,6 +165,21 @@ class DependencyContainer:
         
         try:
             db.execute('ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT "medium"')
+        except:
+            pass  # Column already exists
+        
+        try:
+            db.execute('ALTER TABLE tasks ADD COLUMN category TEXT DEFAULT "Work"')
+        except:
+            pass  # Column already exists
+        
+        try:
+            db.execute('ALTER TABLE tasks ADD COLUMN recurrence TEXT DEFAULT "None"')
+        except:
+            pass  # Column already exists
+        
+        try:
+            db.execute('ALTER TABLE tasks ADD COLUMN image_path TEXT')
         except:
             pass  # Column already exists
         

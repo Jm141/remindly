@@ -53,6 +53,7 @@ class Task:
     description: str = ""
     category: str = ""
     recurrence: str = ""
+    image_path: Optional[str] = None
     priority: str = ""
     due_date: Optional[str] = None
     status: Optional[str] = None
@@ -75,6 +76,7 @@ class Task:
             'description': self.description,
             'category': self.category,
             'recurrence': self.recurrence,
+            'image_path': self.image_path,
             'priority': self.priority,
             'due_date': self.due_date,
             'status': self.status,
@@ -95,6 +97,7 @@ class Task:
             description=data.get('description', ''),
             category=data.get('category', ''),
             recurrence=data.get('recurrence', ''),
+            image_path=data.get('image_path'),
             priority=data.get('priority', ''),
             due_date=data.get('due_date'),
             status=data.get('status'),

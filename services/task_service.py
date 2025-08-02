@@ -18,7 +18,7 @@ class TaskService:
         self.user_repository = user_repository
         self.task_share_service = task_share_service
     
-    def create_task(self, user_id: int, task_data: Dict[str, Any]) -> Tuple[Optional[Task], str]:
+    def create_task(self, user_id: str, task_data: Dict[str, Any]) -> Tuple[Optional[Task], str]:
         """Create a new task"""
         # Validate required fields
         if not task_data.get('title'):
@@ -53,7 +53,7 @@ class TaskService:
         except Exception as e:
             return None, f"Failed to create task: {str(e)}"
     
-    def get_user_tasks(self, user_id: int, completed: Optional[bool] = None) -> List[Task]:
+    def get_user_tasks(self, user_id: str, completed: Optional[bool] = None) -> List[Task]:
         """Get tasks for a user (including shared tasks)"""
         # Get user's own tasks
         user_tasks = self.task_repository.get_tasks_by_user(user_id, completed)
@@ -76,11 +76,11 @@ class TaskService:
         
         return user_tasks
     
-    def get_task(self, task_id: int, user_id: int) -> Optional[Task]:
+    def get_task(self, task_id: str, user_id: str) -> Optional[Task]:
         """Get a specific task"""
         return self.task_repository.get_task_by_id(task_id, user_id)
     
-    def update_task(self, task_id: int, user_id: int, updates: Dict[str, Any]) -> Tuple[bool, str]:
+    def update_task(self, task_id: str, user_id: str, updates: Dict[str, Any]) -> Tuple[bool, str]:
         """Update a task"""
         # Validate task exists and belongs to user
         task = self.task_repository.get_task_by_id(task_id, user_id)
@@ -107,7 +107,7 @@ class TaskService:
         except Exception as e:
             return False, f"Failed to update task: {str(e)}"
     
-    def delete_task(self, task_id: int, user_id: int) -> Tuple[bool, str]:
+    def delete_task(self, task_id: str, user_id: str) -> Tuple[bool, str]:
         """Delete a task"""
         # Validate task exists and belongs to user
         task = self.task_repository.get_task_by_id(task_id, user_id)
@@ -123,7 +123,7 @@ class TaskService:
         except Exception as e:
             return False, f"Failed to delete task: {str(e)}"
     
-    def create_subtask(self, task_id: int, user_id: int, subtask_data: Dict[str, Any]) -> Tuple[Optional[Subtask], str]:
+    def create_subtask(self, task_id: str, user_id: str, subtask_data: Dict[str, Any]) -> Tuple[Optional[Subtask], str]:
         """Create a new subtask"""
         # Validate task exists and belongs to user
         task = self.task_repository.get_task_by_id(task_id, user_id)
@@ -151,7 +151,7 @@ class TaskService:
         except Exception as e:
             return None, f"Failed to create subtask: {str(e)}"
     
-    def get_subtasks(self, task_id: int, user_id: int) -> Tuple[List[Subtask], str]:
+    def get_subtasks(self, task_id: str, user_id: str) -> Tuple[List[Subtask], str]:
         """Get subtasks for a task"""
         # Validate task exists and belongs to user
         task = self.task_repository.get_task_by_id(task_id, user_id)
@@ -161,7 +161,7 @@ class TaskService:
         subtasks = self.subtask_repository.get_subtasks_by_task(task_id)
         return subtasks, "Subtasks retrieved successfully"
     
-    def update_subtask(self, subtask_id: int, task_id: int, user_id: int, updates: Dict[str, Any]) -> Tuple[bool, str]:
+    def update_subtask(self, subtask_id: str, task_id: str, user_id: str, updates: Dict[str, Any]) -> Tuple[bool, str]:
         """Update a subtask"""
         # Validate task exists and belongs to user
         task = self.task_repository.get_task_by_id(task_id, user_id)
@@ -182,7 +182,7 @@ class TaskService:
         except Exception as e:
             return False, f"Failed to update subtask: {str(e)}"
     
-    def delete_subtask(self, subtask_id: int, task_id: int, user_id: int) -> Tuple[bool, str]:
+    def delete_subtask(self, subtask_id: str, task_id: str, user_id: str) -> Tuple[bool, str]:
         """Delete a subtask"""
         # Validate task exists and belongs to user
         task = self.task_repository.get_task_by_id(task_id, user_id)
@@ -198,7 +198,7 @@ class TaskService:
         except Exception as e:
             return False, f"Failed to delete subtask: {str(e)}"
     
-    def get_notifications(self, user_id: int) -> Dict[str, List[Task]]:
+    def get_notifications(self, user_id: str) -> Dict[str, List[Task]]:
         """Get notification data for user"""
         overdue_tasks = self.task_repository.get_overdue_tasks(user_id)
         due_in_1_hour = self.task_repository.get_tasks_due_soon(user_id, hours=1)
