@@ -159,6 +159,14 @@ class SQLiteTaskRepository(TaskRepositoryInterface):
             return self._row_to_task(result[0])
         return None
     
+    def get_task_by_id_only(self, task_id: int) -> Optional[Task]:
+        """Get task by ID without user restriction (for task sharing)"""
+        query = 'SELECT * FROM tasks WHERE id = ?'
+        result = self.db.execute_query(query, (task_id,))
+        if result:
+            return self._row_to_task(result[0])
+        return None
+    
     def update_task(self, task_id: int, user_id: int, updates: Dict[str, Any]) -> bool:
         """Update a task"""
         if not updates:

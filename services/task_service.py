@@ -2,15 +2,21 @@ from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime
 from models.task import Task, Subtask
 from repositories.database_interface import TaskRepositoryInterface, SubtaskRepositoryInterface, UserRepositoryInterface
+from services.task_share_service import TaskShareService
 from config import Config
 
 class TaskService:
     """Task service following Single Responsibility Principle"""
     
-    def __init__(self, task_repository: TaskRepositoryInterface, subtask_repository: SubtaskRepositoryInterface, user_repository: UserRepositoryInterface):
+    def __init__(self, 
+                 task_repository: TaskRepositoryInterface, 
+                 subtask_repository: SubtaskRepositoryInterface, 
+                 user_repository: UserRepositoryInterface,
+                 task_share_service: Optional[TaskShareService] = None):
         self.task_repository = task_repository
         self.subtask_repository = subtask_repository
         self.user_repository = user_repository
+        self.task_share_service = task_share_service
     
     def create_task(self, user_id: int, task_data: Dict[str, Any]) -> Tuple[Optional[Task], str]:
         """Create a new task"""
@@ -48,8 +54,27 @@ class TaskService:
             return None, f"Failed to create task: {str(e)}"
     
     def get_user_tasks(self, user_id: int, completed: Optional[bool] = None) -> List[Task]:
-        """Get tasks for a user"""
-        return self.task_repository.get_tasks_by_user(user_id, completed)
+        """Get tasks for a user (including shared tasks)"""
+        # Get user's own tasks
+        user_tasks = self.task_repository.get_tasks_by_user(user_id, completed)
+        
+        # Get shared tasks if task share service is available
+        if self.task_share_service:
+            shared_tasks = self.task_share_service.get_shared_tasks(user_id)
+            
+            # Filter shared tasks by completion status if specified
+            if completed is not None:
+                shared_tasks = [task for task in shared_tasks if task.completed == completed]
+            
+            # Combine user tasks and shared tasks
+            all_tasks = user_tasks + shared_tasks
+            
+            # Sort by creation date (newest first)
+            all_tasks.sort(key=lambda x: x.created_at or '', reverse=True)
+            
+            return all_tasks
+        
+        return user_tasks
     
     def get_task(self, task_id: int, user_id: int) -> Optional[Task]:
         """Get a specific task"""

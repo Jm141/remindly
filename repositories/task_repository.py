@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from models.task import Task
 from repositories.database_interface import TaskRepositoryInterface
+from abc import abstractmethod
 
 class TaskRepository(TaskRepositoryInterface):
     """Task repository implementation following Single Responsibility Principle"""
@@ -74,6 +75,33 @@ class TaskRepository(TaskRepositoryInterface):
                 SELECT id, user_id, title, description, due_date, priority, status, completed, created_at, updated_at
                 FROM tasks WHERE id = ? AND user_id = ?
             ''', (task_id, user_id))
+            
+            row = cursor.fetchone()
+            if row:
+                return Task(
+                    id=row['id'],
+                    user_id=row['user_id'],
+                    title=row['title'],
+                    description=row['description'],
+                    due_date=row['due_date'],
+                    priority=row['priority'],
+                    status=row['status'],
+                    completed=bool(row['completed']),
+                    created_at=row['created_at'],
+                    updated_at=row['updated_at']
+                )
+            return None
+        except Exception as e:
+            raise e
+    
+    def get_task_by_id_only(self, task_id: int) -> Optional[Task]:
+        """Get task by ID without user restriction (for task sharing)"""
+        try:
+            cursor = self.database.cursor()
+            cursor.execute('''
+                SELECT id, user_id, title, description, due_date, priority, status, completed, created_at, updated_at
+                FROM tasks WHERE id = ?
+            ''', (task_id,))
             
             row = cursor.fetchone()
             if row:

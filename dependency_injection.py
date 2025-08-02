@@ -4,10 +4,13 @@ from pathlib import Path
 from repositories.user_repository import UserRepository
 from repositories.task_repository import TaskRepository
 from repositories.subtask_repository import SubtaskRepository
+from repositories.task_share_repository import SQLiteTaskShareRepository
 from services.auth_service import AuthService
 from services.task_service import TaskService
+from services.task_share_service import TaskShareService
 from controllers.auth_controller import AuthController
 from controllers.task_controller import TaskController
+from controllers.task_share_controller import TaskShareController
 from config import Config
 
 class DependencyContainer:
@@ -18,10 +21,13 @@ class DependencyContainer:
         self._user_repository = None
         self._task_repository = None
         self._subtask_repository = None
+        self._task_share_repository = None
         self._auth_service = None
         self._task_service = None
+        self._task_share_service = None
         self._auth_controller = None
         self._task_controller = None
+        self._task_share_controller = None
     
     def get_database(self):
         """Get database connection"""
@@ -54,6 +60,12 @@ class DependencyContainer:
             self._subtask_repository = SubtaskRepository(self.get_database())
         return self._subtask_repository
     
+    def get_task_share_repository(self):
+        """Get task share repository"""
+        if self._task_share_repository is None:
+            self._task_share_repository = SQLiteTaskShareRepository(self.get_database())
+        return self._task_share_repository
+    
     def get_auth_service(self, bcrypt):
         """Get auth service"""
         if self._auth_service is None:
@@ -69,9 +81,20 @@ class DependencyContainer:
             self._task_service = TaskService(
                 self.get_task_repository(),
                 self.get_subtask_repository(),
-                self.get_user_repository()
+                self.get_user_repository(),
+                self.get_task_share_service()
             )
         return self._task_service
+    
+    def get_task_share_service(self):
+        """Get task share service"""
+        if self._task_share_service is None:
+            self._task_share_service = TaskShareService(
+                self.get_task_share_repository(),
+                self.get_task_repository(),
+                self.get_user_repository()
+            )
+        return self._task_share_service
     
     def get_auth_controller(self, bcrypt):
         """Get auth controller"""
@@ -89,6 +112,14 @@ class DependencyContainer:
                 self.get_auth_service(bcrypt)
             )
         return self._task_controller
+    
+    def get_task_share_controller(self, bcrypt):
+        """Get task share controller"""
+        if self._task_share_controller is None:
+            self._task_share_controller = TaskShareController(
+                self.get_task_share_service()
+            )
+        return self._task_share_controller
     
     def _initialize_tables(self):
         """Initialize database tables"""
@@ -141,6 +172,29 @@ class DependencyContainer:
         db.execute('CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)')
         db.execute('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)')
         db.execute('CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON subtasks(task_id)')
+        
+        # Task sharing table for collaboration
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS task_shares (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER NOT NULL,
+                owner_id INTEGER NOT NULL,
+                shared_with_id INTEGER NOT NULL,
+                permission_level TEXT DEFAULT 'view', -- 'view', 'edit', 'admin'
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
+                FOREIGN KEY (owner_id) REFERENCES users (id) ON DELETE CASCADE,
+                FOREIGN KEY (shared_with_id) REFERENCES users (id) ON DELETE CASCADE,
+                UNIQUE(task_id, shared_with_id)
+            )
+        ''')
+        
+        # Create indexes for task sharing
+        db.execute('CREATE INDEX IF NOT EXISTS idx_task_shares_task_id ON task_shares(task_id)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_task_shares_owner_id ON task_shares(owner_id)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_task_shares_shared_with_id ON task_shares(shared_with_id)')
+        
         db.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)')
         
         db.commit()

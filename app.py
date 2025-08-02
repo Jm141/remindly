@@ -206,13 +206,75 @@ def subtask_operations(task_id, subtask_id):
 @app.route(f'{Config.API_PREFIX}/notifications/due', methods=['GET'])
 @jwt_required()
 def notifications():
-    """Get due notifications for current user"""
+    """Get due notifications endpoint"""
     try:
         task_controller = container.get_task_controller(bcrypt)
-        return task_controller.get_notifications()
+        return task_controller.get_due_notifications()
     except Exception as e:
         app.logger.error(f"Notifications error: {str(e)}")
+        app.logger.error(traceback.format_exc())
         return jsonify({'error': f'Failed to get notifications: {str(e)}'}), 500
+
+# --- Task Sharing Routes ---
+@app.route(f'{Config.API_PREFIX}/tasks/share', methods=['POST'])
+@jwt_required()
+def share_task():
+    """Share a task with another user"""
+    try:
+        task_share_controller = container.get_task_share_controller(bcrypt)
+        return task_share_controller.share_task()
+    except Exception as e:
+        app.logger.error(f"Share task error: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': f'Failed to share task: {str(e)}'}), 500
+
+@app.route(f'{Config.API_PREFIX}/tasks/shared', methods=['GET'])
+@jwt_required()
+def get_shared_tasks():
+    """Get all tasks shared with current user"""
+    try:
+        task_share_controller = container.get_task_share_controller(bcrypt)
+        return task_share_controller.get_shared_tasks()
+    except Exception as e:
+        app.logger.error(f"Get shared tasks error: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': f'Failed to get shared tasks: {str(e)}'}), 500
+
+@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>/shares', methods=['GET'])
+@jwt_required()
+def get_task_shares(task_id):
+    """Get all shares for a specific task (owner only)"""
+    try:
+        task_share_controller = container.get_task_share_controller(bcrypt)
+        return task_share_controller.get_task_shares(task_id)
+    except Exception as e:
+        app.logger.error(f"Get task shares error: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': f'Failed to get task shares: {str(e)}'}), 500
+
+@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>/shares/permission', methods=['PUT'])
+@jwt_required()
+def update_share_permission(task_id):
+    """Update permission level for a shared task"""
+    try:
+        task_share_controller = container.get_task_share_controller(bcrypt)
+        return task_share_controller.update_share_permission(task_id)
+    except Exception as e:
+        app.logger.error(f"Update share permission error: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': f'Failed to update permission: {str(e)}'}), 500
+
+@app.route(f'{Config.API_PREFIX}/tasks/<int:task_id>/shares', methods=['DELETE'])
+@jwt_required()
+def remove_share(task_id):
+    """Remove a task share"""
+    try:
+        task_share_controller = container.get_task_share_controller(bcrypt)
+        return task_share_controller.remove_share(task_id)
+    except Exception as e:
+        app.logger.error(f"Remove share error: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': f'Failed to remove share: {str(e)}'}), 500
 
 # --- Error Handlers ---
 @app.errorhandler(404)
