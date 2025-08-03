@@ -20,195 +20,267 @@ class TaskService:
     
     def create_task(self, user_id: str, task_data: Dict[str, Any]) -> Tuple[Optional[Task], str]:
         """Create a new task"""
-        # Validate required fields
-        if not task_data.get('title'):
-            return None, "Task title is required"
-        
-        if len(task_data['title']) > Config.MAX_TITLE_LENGTH:
-            return None, f"Title must be less than {Config.MAX_TITLE_LENGTH} characters"
-        
-        # Validate due date
-        due_date = task_data.get('due_date')
-        if due_date:
-            validation_result = self._validate_due_date(due_date)
-            if not validation_result[0]:
-                return None, validation_result[1]
-        
-        # Create task object
-        task = Task(
-            id=None,
-            user_id=user_id,
-            title=task_data['title'],
-            description=task_data.get('description', ''),
-            category=task_data.get('category', ''),
-            recurrence=task_data.get('recurrence', ''),
-            priority=task_data.get('priority', ''),
-            due_date=due_date,
-            completed=False
-        )
-        
         try:
+            user_id_int = int(user_id)
+            
+            # Validate required fields
+            if not task_data.get('title'):
+                return None, "Task title is required"
+            
+            if len(task_data['title']) > Config.MAX_TITLE_LENGTH:
+                return None, f"Title must be less than {Config.MAX_TITLE_LENGTH} characters"
+            
+            # Validate due date
+            due_date = task_data.get('due_date')
+            if due_date:
+                validation_result = self._validate_due_date(due_date)
+                if not validation_result[0]:
+                    return None, validation_result[1]
+            
+            # Create task object
+            task = Task(
+                id=None,
+                user_id=user_id_int,
+                title=task_data['title'],
+                description=task_data.get('description', ''),
+                category=task_data.get('category', ''),
+                recurrence=task_data.get('recurrence', ''),
+                priority=task_data.get('priority', ''),
+                due_date=due_date,
+                completed=False
+            )
+            
             created_task = self.task_repository.create_task(task)
             return created_task, "Task created successfully"
+        except ValueError as e:
+            return None, f"Invalid user ID: {str(e)}"
         except Exception as e:
             return None, f"Failed to create task: {str(e)}"
     
     def get_user_tasks(self, user_id: str, completed: Optional[bool] = None) -> List[Task]:
         """Get tasks for a user (including shared tasks)"""
-        # Get user's own tasks
-        user_tasks = self.task_repository.get_tasks_by_user(user_id, completed)
-        
-        # Get shared tasks if task share service is available
-        if self.task_share_service:
-            shared_tasks = self.task_share_service.get_shared_tasks(user_id)
+        try:
+            user_id_int = int(user_id)
+            print(f"TaskService.get_user_tasks called for user {user_id_int}, completed: {completed}")
             
-            # Filter shared tasks by completion status if specified
-            if completed is not None:
-                shared_tasks = [task for task in shared_tasks if task.completed == completed]
+            # Get user's own tasks
+            user_tasks = self.task_repository.get_tasks_by_user(user_id_int, completed)
+            print(f"Retrieved {len(user_tasks)} user tasks")
             
-            # Combine user tasks and shared tasks
-            all_tasks = user_tasks + shared_tasks
+            # Log subtask information for each task
+            for task in user_tasks:
+                print(f"Task {task.id} '{task.title}' has {len(task.subtasks)} subtasks")
+                for subtask in task.subtasks:
+                    print(f"  Subtask {subtask.id}: '{subtask.title}' (completed: {subtask.completed})")
             
-            # Sort by creation date (newest first)
-            all_tasks.sort(key=lambda x: x.created_at or '', reverse=True)
+            # Get shared tasks if task share service is available
+            if self.task_share_service:
+                shared_tasks = self.task_share_service.get_shared_tasks(user_id)
+                print(f"Retrieved {len(shared_tasks)} shared tasks")
+                
+                # Filter shared tasks by completion status if specified
+                if completed is not None:
+                    shared_tasks = [task for task in shared_tasks if task.completed == completed]
+                
+                # Combine user tasks and shared tasks
+                all_tasks = user_tasks + shared_tasks
+                
+                # Sort by creation date (newest first)
+                all_tasks.sort(key=lambda x: x.created_at or '', reverse=True)
+                
+                print(f"Returning {len(all_tasks)} total tasks")
+                return all_tasks
             
-            return all_tasks
-        
-        return user_tasks
+            print(f"Returning {len(user_tasks)} user tasks (no shared tasks)")
+            return user_tasks
+        except ValueError as e:
+            print(f"Invalid user_id format: {e}")
+            return []
+        except Exception as e:
+            print(f"Error in get_user_tasks: {e}")
+            return []
     
     def get_task(self, task_id: str, user_id: str) -> Optional[Task]:
         """Get a specific task"""
-        return self.task_repository.get_task_by_id(task_id, user_id)
+        try:
+            task_id_int = int(task_id)
+            user_id_int = int(user_id)
+            return self.task_repository.get_task_by_id(task_id_int, user_id_int)
+        except ValueError:
+            return None
     
     def update_task(self, task_id: str, user_id: str, updates: Dict[str, Any]) -> Tuple[bool, str]:
         """Update a task"""
-        # Validate task exists and belongs to user
-        task = self.task_repository.get_task_by_id(task_id, user_id)
-        if not task:
-            return False, "Task not found or unauthorized"
-        
-        # Validate due date if being updated
-        if 'due_date' in updates and updates['due_date']:
-            validation_result = self._validate_due_date(updates['due_date'])
-            if not validation_result[0]:
-                return False, validation_result[1]
-        
-        # Validate title length if being updated
-        if 'title' in updates and updates['title']:
-            if len(updates['title']) > Config.MAX_TITLE_LENGTH:
-                return False, f"Title must be less than {Config.MAX_TITLE_LENGTH} characters"
-        
         try:
-            success = self.task_repository.update_task(task_id, user_id, updates)
+            task_id_int = int(task_id)
+            user_id_int = int(user_id)
+            
+            # Validate task exists and belongs to user
+            task = self.task_repository.get_task_by_id(task_id_int, user_id_int)
+            if not task:
+                return False, "Task not found or unauthorized"
+            
+            # Validate due date if being updated
+            if 'due_date' in updates and updates['due_date']:
+                validation_result = self._validate_due_date(updates['due_date'])
+                if not validation_result[0]:
+                    return False, validation_result[1]
+            
+            # Validate title length if being updated
+            if 'title' in updates and updates['title']:
+                if len(updates['title']) > Config.MAX_TITLE_LENGTH:
+                    return False, f"Title must be less than {Config.MAX_TITLE_LENGTH} characters"
+            
+            success = self.task_repository.update_task(task_id_int, user_id_int, updates)
             if success:
                 return True, "Task updated successfully"
             else:
                 return False, "Failed to update task"
+        except ValueError as e:
+            return False, f"Invalid ID format: {str(e)}"
         except Exception as e:
             return False, f"Failed to update task: {str(e)}"
     
     def delete_task(self, task_id: str, user_id: str) -> Tuple[bool, str]:
         """Delete a task"""
-        # Validate task exists and belongs to user
-        task = self.task_repository.get_task_by_id(task_id, user_id)
-        if not task:
-            return False, "Task not found or unauthorized"
-        
         try:
-            success = self.task_repository.delete_task(task_id, user_id)
+            task_id_int = int(task_id)
+            user_id_int = int(user_id)
+            
+            # Validate task exists and belongs to user
+            task = self.task_repository.get_task_by_id(task_id_int, user_id_int)
+            if not task:
+                return False, "Task not found or unauthorized"
+            
+            success = self.task_repository.delete_task(task_id_int, user_id_int)
             if success:
                 return True, "Task deleted successfully"
             else:
                 return False, "Failed to delete task"
+        except ValueError as e:
+            return False, f"Invalid ID format: {str(e)}"
         except Exception as e:
             return False, f"Failed to delete task: {str(e)}"
     
     def create_subtask(self, task_id: str, user_id: str, subtask_data: Dict[str, Any]) -> Tuple[Optional[Subtask], str]:
         """Create a new subtask"""
-        # Validate task exists and belongs to user
-        task = self.task_repository.get_task_by_id(task_id, user_id)
-        if not task:
-            return None, "Task not found or unauthorized"
-        
-        # Validate required fields
-        if not subtask_data.get('title'):
-            return None, "Subtask title is required"
-        
-        if len(subtask_data['title']) > Config.MAX_TITLE_LENGTH:
-            return None, f"Title must be less than {Config.MAX_TITLE_LENGTH} characters"
-        
-        # Create subtask object
-        subtask = Subtask(
-            id=None,
-            task_id=task_id,
-            title=subtask_data['title'],
-            completed=subtask_data.get('completed', False)
-        )
-        
         try:
+            # Convert string IDs to integers
+            task_id_int = int(task_id)
+            user_id_int = int(user_id)
+            
+            # Validate task exists and belongs to user
+            task = self.task_repository.get_task_by_id(task_id_int, user_id_int)
+            if not task:
+                return None, "Task not found or unauthorized"
+            
+            # Validate required fields
+            if not subtask_data.get('title'):
+                return None, "Subtask title is required"
+            
+            if len(subtask_data['title']) > Config.MAX_TITLE_LENGTH:
+                return None, f"Title must be less than {Config.MAX_TITLE_LENGTH} characters"
+            
+            # Create subtask object
+            subtask = Subtask(
+                id=None,
+                task_id=task_id_int,  # Use integer task_id
+                title=subtask_data['title'],
+                completed=subtask_data.get('completed', False)
+            )
+            
             created_subtask = self.subtask_repository.create_subtask(subtask)
             return created_subtask, "Subtask created successfully"
+        except ValueError as e:
+            return None, f"Invalid task ID or user ID: {str(e)}"
         except Exception as e:
             return None, f"Failed to create subtask: {str(e)}"
     
     def get_subtasks(self, task_id: str, user_id: str) -> Tuple[List[Subtask], str]:
         """Get subtasks for a task"""
-        # Validate task exists and belongs to user
-        task = self.task_repository.get_task_by_id(task_id, user_id)
-        if not task:
-            return [], "Task not found or unauthorized"
-        
-        subtasks = self.subtask_repository.get_subtasks_by_task(task_id)
-        return subtasks, "Subtasks retrieved successfully"
+        try:
+            # Convert string IDs to integers
+            task_id_int = int(task_id)
+            user_id_int = int(user_id)
+            
+            # Validate task exists and belongs to user
+            task = self.task_repository.get_task_by_id(task_id_int, user_id_int)
+            if not task:
+                return [], "Task not found or unauthorized"
+            
+            subtasks = self.subtask_repository.get_subtasks_by_task(task_id_int)
+            return subtasks, "Subtasks retrieved successfully"
+        except ValueError as e:
+            return [], f"Invalid task ID or user ID: {str(e)}"
+        except Exception as e:
+            return [], f"Failed to get subtasks: {str(e)}"
     
     def update_subtask(self, subtask_id: str, task_id: str, user_id: str, updates: Dict[str, Any]) -> Tuple[bool, str]:
         """Update a subtask"""
-        # Validate task exists and belongs to user
-        task = self.task_repository.get_task_by_id(task_id, user_id)
-        if not task:
-            return False, "Task not found or unauthorized"
-        
-        # Validate title length if being updated
-        if 'title' in updates and updates['title']:
-            if len(updates['title']) > Config.MAX_TITLE_LENGTH:
-                return False, f"Title must be less than {Config.MAX_TITLE_LENGTH} characters"
-        
         try:
-            success = self.subtask_repository.update_subtask(subtask_id, task_id, updates)
+            # Convert string IDs to integers
+            subtask_id_int = int(subtask_id)
+            task_id_int = int(task_id)
+            user_id_int = int(user_id)
+            
+            # Validate task exists and belongs to user
+            task = self.task_repository.get_task_by_id(task_id_int, user_id_int)
+            if not task:
+                return False, "Task not found or unauthorized"
+            
+            # Validate title length if being updated
+            if 'title' in updates and updates['title']:
+                if len(updates['title']) > Config.MAX_TITLE_LENGTH:
+                    return False, f"Title must be less than {Config.MAX_TITLE_LENGTH} characters"
+            
+            success = self.subtask_repository.update_subtask(subtask_id_int, task_id_int, updates)
             if success:
                 return True, "Subtask updated successfully"
             else:
                 return False, "Failed to update subtask"
+        except ValueError as e:
+            return False, f"Invalid ID format: {str(e)}"
         except Exception as e:
             return False, f"Failed to update subtask: {str(e)}"
     
     def delete_subtask(self, subtask_id: str, task_id: str, user_id: str) -> Tuple[bool, str]:
         """Delete a subtask"""
-        # Validate task exists and belongs to user
-        task = self.task_repository.get_task_by_id(task_id, user_id)
-        if not task:
-            return False, "Task not found or unauthorized"
-        
         try:
-            success = self.subtask_repository.delete_subtask(subtask_id, task_id)
+            # Convert string IDs to integers
+            subtask_id_int = int(subtask_id)
+            task_id_int = int(task_id)
+            user_id_int = int(user_id)
+            
+            # Validate task exists and belongs to user
+            task = self.task_repository.get_task_by_id(task_id_int, user_id_int)
+            if not task:
+                return False, "Task not found or unauthorized"
+            
+            success = self.subtask_repository.delete_subtask(subtask_id_int, task_id_int)
             if success:
                 return True, "Subtask deleted successfully"
             else:
                 return False, "Failed to delete subtask"
+        except ValueError as e:
+            return False, f"Invalid ID format: {str(e)}"
         except Exception as e:
             return False, f"Failed to delete subtask: {str(e)}"
     
     def get_notifications(self, user_id: str) -> Dict[str, List[Task]]:
         """Get notification data for user"""
-        overdue_tasks = self.task_repository.get_overdue_tasks(user_id)
-        due_in_1_hour = self.task_repository.get_tasks_due_soon(user_id, hours=1)
-        due_in_1_day = self.task_repository.get_tasks_due_soon(user_id, hours=24)
-        
-        return {
-            'overdue': overdue_tasks,
-            'due_in_1_hour': due_in_1_hour,
-            'due_in_1_day': due_in_1_day
-        }
+        try:
+            user_id_int = int(user_id)
+            overdue_tasks = self.task_repository.get_overdue_tasks(user_id_int)
+            due_in_1_hour = self.task_repository.get_tasks_due_soon(user_id_int, hours=1)
+            due_in_1_day = self.task_repository.get_tasks_due_soon(user_id_int, hours=24)
+            
+            return {
+                'overdue': overdue_tasks,
+                'due_in_1_hour': due_in_1_hour,
+                'due_in_1_day': due_in_1_day
+            }
+        except ValueError:
+            return {'overdue': [], 'due_in_1_hour': [], 'due_in_1_day': []}
     
     def _validate_due_date(self, due_date_str: str) -> Tuple[bool, str]:
         """Validate due date format and ensure it's not in the past"""

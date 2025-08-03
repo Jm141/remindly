@@ -2,9 +2,9 @@ import sqlite3
 import os
 from pathlib import Path
 from repositories.user_repository import UserRepository
-from repositories.task_repository import TaskRepository
 from repositories.subtask_repository import SubtaskRepository
 from repositories.task_share_repository import SQLiteTaskShareRepository
+from repositories.sqlite_repository import SQLiteDatabase, SQLiteTaskRepository, SQLiteSubtaskRepository
 from services.auth_service import AuthService
 from services.task_service import TaskService
 from services.task_share_service import TaskShareService
@@ -18,6 +18,7 @@ class DependencyContainer:
     
     def __init__(self):
         self._database = None
+        self._sqlite_database = None
         self._user_repository = None
         self._task_repository = None
         self._subtask_repository = None
@@ -42,6 +43,12 @@ class DependencyContainer:
             self._initialize_tables()
         return self._database
     
+    def get_sqlite_database(self):
+        """Get SQLite database interface"""
+        if self._sqlite_database is None:
+            self._sqlite_database = SQLiteDatabase(Config.DATABASE_PATH)
+        return self._sqlite_database
+    
     def get_user_repository(self):
         """Get user repository"""
         if self._user_repository is None:
@@ -51,13 +58,13 @@ class DependencyContainer:
     def get_task_repository(self):
         """Get task repository"""
         if self._task_repository is None:
-            self._task_repository = TaskRepository(self.get_database())
+            self._task_repository = SQLiteTaskRepository(self.get_sqlite_database(), self.get_subtask_repository())
         return self._task_repository
     
     def get_subtask_repository(self):
         """Get subtask repository"""
         if self._subtask_repository is None:
-            self._subtask_repository = SubtaskRepository(self.get_database())
+            self._subtask_repository = SQLiteSubtaskRepository(self.get_sqlite_database())
         return self._subtask_repository
     
     def get_task_share_repository(self):

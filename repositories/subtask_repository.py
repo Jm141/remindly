@@ -16,7 +16,7 @@ class SubtaskRepository(SubtaskRepositoryInterface):
             cursor.execute('''
                 INSERT INTO subtasks (task_id, title, description, completed)
                 VALUES (?, ?, ?, ?)
-            ''', (subtask.task_id, subtask.title, subtask.description, subtask.completed))
+            ''', (subtask.task_id, subtask.title, subtask.description or '', subtask.completed))
             
             subtask.id = cursor.lastrowid
             self.database.commit()
@@ -28,6 +28,7 @@ class SubtaskRepository(SubtaskRepositoryInterface):
     def get_subtasks_by_task(self, task_id: int) -> List[Subtask]:
         """Get subtasks for a task"""
         try:
+            print(f"SubtaskRepository.get_subtasks_by_task called for task_id: {task_id}")
             cursor = self.database.cursor()
             cursor.execute('''
                 SELECT id, task_id, title, description, completed, created_at, updated_at
@@ -36,9 +37,11 @@ class SubtaskRepository(SubtaskRepositoryInterface):
             ''', (task_id,))
             
             rows = cursor.fetchall()
+            print(f"Found {len(rows)} subtasks in database for task {task_id}")
+            
             subtasks = []
             for row in rows:
-                subtasks.append(Subtask(
+                subtask = Subtask(
                     id=row['id'],
                     task_id=row['task_id'],
                     title=row['title'],
@@ -46,9 +49,13 @@ class SubtaskRepository(SubtaskRepositoryInterface):
                     completed=bool(row['completed']),
                     created_at=row['created_at'],
                     updated_at=row['updated_at']
-                ))
+                )
+                subtasks.append(subtask)
+                print(f"  Loaded subtask {subtask.id}: '{subtask.title}' (completed: {subtask.completed})")
+            
             return subtasks
         except Exception as e:
+            print(f"Error in get_subtasks_by_task: {e}")
             raise e
     
     def get_subtask_by_id(self, subtask_id: int, task_id: int) -> Optional[Subtask]:

@@ -28,10 +28,20 @@ class TaskController:
             if completed_param is not None:
                 completed = completed_param.lower() == 'true'
             
+            print(f"Getting tasks for user {user_id}, completed: {completed}")
+            
             tasks = self.task_service.get_user_tasks(user_id, completed)
+            
+            print(f"Found {len(tasks)} tasks")
+            for task in tasks:
+                print(f"Task {task.id}: '{task.title}' has {len(task.subtasks)} subtasks")
+                for subtask in task.subtasks:
+                    print(f"  - Subtask {subtask.id}: '{subtask.title}' (completed: {subtask.completed})")
+            
             return jsonify([task.to_dict() for task in tasks]), 200
             
         except Exception as e:
+            print(f"Exception in get_tasks: {str(e)}")
             return jsonify({'error': f'Failed to get tasks: {str(e)}'}), 500
     
     def create_task(self):
@@ -66,7 +76,7 @@ class TaskController:
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
             
-            success, message = self.task_service.update_task(task_id, user_id, data)
+            success, message = self.task_service.update_task(str(task_id), str(user_id), data)
             
             if success:
                 return jsonify({'success': True, 'message': message}), 200
@@ -83,7 +93,7 @@ class TaskController:
             if not user_id:
                 return jsonify({'error': 'Unauthorized'}), 401
             
-            success, message = self.task_service.delete_task(task_id, user_id)
+            success, message = self.task_service.delete_task(str(task_id), str(user_id))
             
             if success:
                 return jsonify({'success': True, 'message': message}), 200
@@ -100,7 +110,7 @@ class TaskController:
             if not user_id:
                 return jsonify({'error': 'Unauthorized'}), 401
             
-            subtasks, message = self.task_service.get_subtasks(task_id, user_id)
+            subtasks, message = self.task_service.get_subtasks(str(task_id), str(user_id))
             
             if subtasks is not None:
                 return jsonify([subtask.to_dict() for subtask in subtasks]), 200
@@ -110,7 +120,7 @@ class TaskController:
         except Exception as e:
             return jsonify({'error': f'Failed to get subtasks: {str(e)}'}), 500
     
-    def create_subtask(self, task_id: int):
+    def create_subtask(self, task_id: str):
         """Create a new subtask"""
         try:
             user_id = self._get_user_id()
@@ -121,14 +131,19 @@ class TaskController:
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
             
-            subtask, message = self.task_service.create_subtask(task_id, user_id, data)
+            print(f"Creating subtask for task {task_id}, user {user_id}, data: {data}")
+            
+            subtask, message = self.task_service.create_subtask(task_id, str(user_id), data)
             
             if subtask:
+                print(f"Subtask created successfully: {subtask.to_dict()}")
                 return jsonify({'success': True, 'subtask': subtask.to_dict(), 'message': message}), 201
             else:
+                print(f"Failed to create subtask: {message}")
                 return jsonify({'error': message}), 400
                 
         except Exception as e:
+            print(f"Exception in create_subtask: {str(e)}")
             return jsonify({'error': f'Failed to create subtask: {str(e)}'}), 500
     
     def update_subtask(self, task_id: int, subtask_id: int):
@@ -142,7 +157,7 @@ class TaskController:
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
             
-            success, message = self.task_service.update_subtask(subtask_id, task_id, user_id, data)
+            success, message = self.task_service.update_subtask(str(subtask_id), str(task_id), str(user_id), data)
             
             if success:
                 return jsonify({'success': True, 'message': message}), 200
@@ -159,7 +174,7 @@ class TaskController:
             if not user_id:
                 return jsonify({'error': 'Unauthorized'}), 401
             
-            success, message = self.task_service.delete_subtask(subtask_id, task_id, user_id)
+            success, message = self.task_service.delete_subtask(str(subtask_id), str(task_id), str(user_id))
             
             if success:
                 return jsonify({'success': True, 'message': message}), 200

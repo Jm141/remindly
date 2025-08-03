@@ -237,7 +237,10 @@ class SQLiteTaskRepository(TaskRepositoryInterface):
         )
         
         # Load subtasks
+        print(f"Loading subtasks for task {task.id} '{task.title}'")
         task.subtasks = self.subtask_repo.get_subtasks_by_task(task.id)
+        print(f"Loaded {len(task.subtasks)} subtasks for task {task.id}")
+        
         return task
 
 class SQLiteSubtaskRepository(SubtaskRepositoryInterface):
@@ -281,17 +284,24 @@ class SQLiteSubtaskRepository(SubtaskRepositoryInterface):
     
     def get_subtasks_by_task(self, task_id: int) -> List[Subtask]:
         """Get subtasks for a task"""
+        print(f"SQLiteSubtaskRepository.get_subtasks_by_task called for task_id: {task_id}")
         query = 'SELECT * FROM subtasks WHERE task_id = ?'
         result = self.db.execute_query(query, (task_id,))
-        return [
-            Subtask(
+        print(f"SQLiteSubtaskRepository: Found {len(result)} subtasks in database for task {task_id}")
+        
+        subtasks = []
+        for row in result:
+            subtask = Subtask(
                 id=row['id'],
                 task_id=row['task_id'],
                 title=row['title'],
                 completed=bool(row['completed'])
             )
-            for row in result
-        ]
+            subtasks.append(subtask)
+            print(f"  SQLiteSubtaskRepository: Loaded subtask {subtask.id}: '{subtask.title}' (completed: {subtask.completed})")
+        
+        print(f"SQLiteSubtaskRepository: Returning {len(subtasks)} subtasks for task {task_id}")
+        return subtasks
     
     def update_subtask(self, subtask_id: int, task_id: int, updates: Dict[str, Any]) -> bool:
         """Update a subtask"""

@@ -2,14 +2,15 @@ import sqlite3
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from models.task import Task
-from repositories.database_interface import TaskRepositoryInterface
+from repositories.database_interface import TaskRepositoryInterface, SubtaskRepositoryInterface
 from abc import abstractmethod
 
 class TaskRepository(TaskRepositoryInterface):
     """Task repository implementation following Single Responsibility Principle"""
     
-    def __init__(self, database: sqlite3.Connection):
+    def __init__(self, database: sqlite3.Connection, subtask_repository: Optional[SubtaskRepositoryInterface] = None):
         self.database = database
+        self.subtask_repository = subtask_repository
     
     def create_task(self, task: Task) -> Task:
         """Create a new task"""
@@ -51,7 +52,7 @@ class TaskRepository(TaskRepositoryInterface):
             rows = cursor.fetchall()
             tasks = []
             for row in rows:
-                tasks.append(Task(
+                task = Task(
                     id=row['id'],
                     user_id=row['user_id'],
                     title=row['title'],
@@ -62,7 +63,21 @@ class TaskRepository(TaskRepositoryInterface):
                     completed=bool(row['completed']),
                     created_at=row['created_at'],
                     updated_at=row['updated_at']
-                ))
+                )
+                
+                # Load subtasks for this task if subtask repository is available
+                if self.subtask_repository:
+                    try:
+                        subtasks = self.subtask_repository.get_subtasks_by_task(task.id)
+                        task.subtasks = subtasks
+                        print(f"Loaded {len(subtasks)} subtasks for task {task.id}")
+                    except Exception as e:
+                        print(f"Error loading subtasks for task {task.id}: {e}")
+                        task.subtasks = []
+                else:
+                    print(f"No subtask repository available, subtasks will be empty for task {task.id}")
+                
+                tasks.append(task)
             return tasks
         except Exception as e:
             raise e
