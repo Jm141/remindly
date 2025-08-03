@@ -19,21 +19,21 @@ class TaskShareController:
                 return jsonify({'error': 'No data provided'}), 400
             
             task_id = data.get('task_id')
-            username = data.get('username')
+            recipient_identifier = data.get('recipient_identifier')  # Can be username or user_code
             permission_level = data.get('permission_level', 'view')
             
             # Debug logging
             print(f"🔍 TaskShareController.share_task: Received data:")
             print(f"  - task_id: {task_id} (type: {type(task_id)})")
-            print(f"  - username: {username} (type: {type(username)})")
+            print(f"  - recipient_identifier: {recipient_identifier} (type: {type(recipient_identifier)})")
             print(f"  - permission_level: {permission_level} (type: {type(permission_level)})")
             print(f"  - current_user_id: {current_user_id} (type: {type(current_user_id)})")
             
-            if not task_id or not username:
-                return jsonify({'error': 'Task ID and username are required'}), 400
+            if not task_id or not recipient_identifier:
+                return jsonify({'error': 'Task ID and recipient identifier (username or user code) are required'}), 400
             
             success, message = self.task_share_service.share_task(
-                task_id, current_user_id, username, permission_level
+                task_id, current_user_id, recipient_identifier, permission_level
             )
             
             if success:
@@ -80,14 +80,14 @@ class TaskShareController:
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
             
-            username = data.get('username')
+            user_code = data.get('user_code')
             permission_level = data.get('permission_level')
             
-            if not username or not permission_level:
-                return jsonify({'error': 'Username and permission level are required'}), 400
+            if not user_code or not permission_level:
+                return jsonify({'error': 'User code and permission level are required'}), 400
             
             success, message = self.task_share_service.update_share_permission(
-                task_id, current_user_id, username, permission_level
+                task_id, current_user_id, user_code, permission_level
             )
             
             if success:
@@ -108,13 +108,13 @@ class TaskShareController:
             if not data:
                 return jsonify({'error': 'No data provided'}), 400
             
-            username = data.get('username')
+            user_code = data.get('user_code')
             
-            if not username:
-                return jsonify({'error': 'Username is required'}), 400
+            if not user_code:
+                return jsonify({'error': 'User code is required'}), 400
             
             success, message = self.task_share_service.remove_share(
-                task_id, current_user_id, username
+                task_id, current_user_id, user_code
             )
             
             if success:

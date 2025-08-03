@@ -3,6 +3,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token, create_refresh_token
 from models.user import User
 from repositories.database_interface import UserRepositoryInterface
+from utils.user_code_generator import UserCodeGenerator
 from config import Config
 
 class AuthService:
@@ -28,13 +29,19 @@ class AuthService:
         if self.user_repository.user_exists(username):
             return False, "Username already exists"
         
+        # Generate unique user code
+        try:
+            user_code = UserCodeGenerator.generate_unique_user_code(Config.DATABASE_PATH)
+        except Exception as e:
+            return False, f"Failed to generate user code: {str(e)}"
+        
         # Hash password and create user
         hashed_password = self.bcrypt.generate_password_hash(password).decode('utf-8')
-        user = User(id=None, username=username, password_hash=hashed_password)
+        user = User(id=None, user_code=user_code, username=username, password_hash=hashed_password)
         
         try:
             created_user = self.user_repository.create_user(user)
-            return True, "User registered successfully"
+            return True, f"User registered successfully. Your unique code is: {user_code}"
         except Exception as e:
             return False, f"Registration failed: {str(e)}"
     
@@ -66,6 +73,10 @@ class AuthService:
     def get_user_by_username(self, username: str) -> Optional[User]:
         """Get user by username"""
         return self.user_repository.get_user_by_username(username)
+    
+    def get_user_by_user_code(self, user_code: str) -> Optional[User]:
+        """Get user by user_code"""
+        return self.user_repository.get_user_by_user_code(user_code)
     
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID"""

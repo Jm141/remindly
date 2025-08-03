@@ -5,6 +5,7 @@ from typing import Optional
 class User:
     """User model following Single Responsibility Principle"""
     id: Optional[int]
+    user_code: str
     username: str
     password_hash: str
     email: Optional[str] = None
@@ -20,6 +21,7 @@ class User:
         """Convert user to dictionary (excluding password)"""
         return {
             'id': self.id,
+            'user_code': self.user_code,
             'username': self.username,
             'email': self.email,
             'created_at': self.created_at,
@@ -31,6 +33,7 @@ class User:
         """Create user from dictionary"""
         return cls(
             id=data.get('id'),
+            user_code=data.get('user_code', ''),
             username=data['username'],
             password_hash=data.get('password_hash', data.get('password', '')),
             email=data.get('email'),

@@ -40,6 +40,11 @@ class UserRepositoryInterface(ABC):
         pass
     
     @abstractmethod
+    def get_user_by_user_code(self, user_code: str) -> Optional[User]:
+        """Get user by user_code"""
+        pass
+    
+    @abstractmethod
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID"""
         pass
@@ -47,6 +52,11 @@ class UserRepositoryInterface(ABC):
     @abstractmethod
     def user_exists(self, username: str) -> bool:
         """Check if user exists"""
+        pass
+    
+    @abstractmethod
+    def user_code_exists(self, user_code: str) -> bool:
+        """Check if user_code exists"""
         pass
 
 class TaskRepositoryInterface(ABC):

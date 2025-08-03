@@ -14,15 +14,15 @@ class UserRepository(UserRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                INSERT INTO users (username, password_hash, email)
-                VALUES (?, ?, ?)
-            ''', (user.username, user.password_hash, user.email))
+                INSERT INTO users (user_code, username, password_hash, email)
+                VALUES (?, ?, ?, ?)
+            ''', (user.user_code, user.username, user.password_hash, user.email))
             
             user.id = cursor.lastrowid
             self.database.commit()
             return user
         except sqlite3.IntegrityError:
-            raise ValueError("Username already exists")
+            raise ValueError("Username or user_code already exists")
         except Exception as e:
             self.database.rollback()
             raise e
@@ -32,7 +32,7 @@ class UserRepository(UserRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                SELECT id, username, password_hash, email, created_at, updated_at
+                SELECT id, user_code, username, password_hash, email, created_at, updated_at
                 FROM users WHERE username = ?
             ''', (username,))
             
@@ -40,6 +40,31 @@ class UserRepository(UserRepositoryInterface):
             if row:
                 return User(
                     id=row['id'],
+                    user_code=row['user_code'],
+                    username=row['username'],
+                    password_hash=row['password_hash'],
+                    email=row['email'],
+                    created_at=row['created_at'],
+                    updated_at=row['updated_at']
+                )
+            return None
+        except Exception as e:
+            raise e
+    
+    def get_user_by_user_code(self, user_code: str) -> Optional[User]:
+        """Get user by user_code"""
+        try:
+            cursor = self.database.cursor()
+            cursor.execute('''
+                SELECT id, user_code, username, password_hash, email, created_at, updated_at
+                FROM users WHERE user_code = ?
+            ''', (user_code,))
+            
+            row = cursor.fetchone()
+            if row:
+                return User(
+                    id=row['id'],
+                    user_code=row['user_code'],
                     username=row['username'],
                     password_hash=row['password_hash'],
                     email=row['email'],
@@ -55,7 +80,7 @@ class UserRepository(UserRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('''
-                SELECT id, username, password_hash, email, created_at, updated_at
+                SELECT id, user_code, username, password_hash, email, created_at, updated_at
                 FROM users WHERE id = ?
             ''', (user_id,))
             
@@ -63,6 +88,7 @@ class UserRepository(UserRepositoryInterface):
             if row:
                 return User(
                     id=row['id'],
+                    user_code=row['user_code'],
                     username=row['username'],
                     password_hash=row['password_hash'],
                     email=row['email'],
@@ -78,6 +104,16 @@ class UserRepository(UserRepositoryInterface):
         try:
             cursor = self.database.cursor()
             cursor.execute('SELECT COUNT(*) as count FROM users WHERE username = ?', (username,))
+            row = cursor.fetchone()
+            return row['count'] > 0
+        except Exception as e:
+            raise e
+    
+    def user_code_exists(self, user_code: str) -> bool:
+        """Check if user_code exists"""
+        try:
+            cursor = self.database.cursor()
+            cursor.execute('SELECT COUNT(*) as count FROM users WHERE user_code = ?', (user_code,))
             row = cursor.fetchone()
             return row['count'] > 0
         except Exception as e:

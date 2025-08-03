@@ -136,6 +136,7 @@ class DependencyContainer:
         db.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_code TEXT UNIQUE NOT NULL,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 email TEXT,
@@ -143,6 +144,12 @@ class DependencyContainer:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        
+        # Add user_code column to existing users table if it doesn't exist
+        try:
+            db.execute('ALTER TABLE users ADD COLUMN user_code TEXT UNIQUE')
+        except:
+            pass  # Column already exists or table doesn't exist yet
         
         # Tasks table
         db.execute('''
