@@ -159,8 +159,9 @@ class DependencyContainer:
                 title TEXT NOT NULL,
                 description TEXT,
                 category TEXT,
-                due_date TIMESTAMP,
+                recurrence TEXT,
                 priority TEXT DEFAULT 'medium',
+                due_date TIMESTAMP,
                 status TEXT,
                 completed BOOLEAN DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -182,6 +183,11 @@ class DependencyContainer:
         
         try:
             db.execute('ALTER TABLE tasks ADD COLUMN category TEXT')
+        except:
+            pass  # Column already exists
+        
+        try:
+            db.execute('ALTER TABLE tasks ADD COLUMN recurrence TEXT')
         except:
             pass  # Column already exists
         
@@ -229,10 +235,11 @@ class DependencyContainer:
         
         # Create indexes for task sharing
         db.execute('CREATE INDEX IF NOT EXISTS idx_task_shares_task_id ON task_shares(task_id)')
-        db.execute('CREATE INDEX IF NOT EXISTS idx_task_shares_owner_id ON task_shares(owner_id)')
-        db.execute('CREATE INDEX IF NOT EXISTS idx_task_shares_shared_with_id ON task_shares(shared_with_id)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_task_shares_owner_code ON task_shares(owner_code)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_task_shares_shared_with_code ON task_shares(shared_with_code)')
         
         db.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_users_user_code ON users(user_code)')
         
         db.commit()
     

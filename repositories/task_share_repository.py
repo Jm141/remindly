@@ -43,25 +43,7 @@ class SQLiteTaskShareRepository(TaskShareRepositoryInterface):
     
     def __init__(self, database: sqlite3.Connection):
         self.db = database
-        self._init_table()
-    
-    def _init_table(self):
-        """Initialize task shares table with user codes"""
-        cursor = self.db.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS task_shares (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_id INTEGER NOT NULL,
-            owner_code TEXT NOT NULL,
-            shared_with_code TEXT NOT NULL,
-            permission_level TEXT DEFAULT 'view',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
-            FOREIGN KEY (owner_code) REFERENCES users (user_code) ON DELETE CASCADE,
-            FOREIGN KEY (shared_with_code) REFERENCES users (user_code) ON DELETE CASCADE,
-            UNIQUE(task_id, shared_with_code)
-        )''')
-        self.db.commit()
+        # Table is created in dependency_injection.py, no need to create here
     
     def create_share(self, task_share: TaskShare) -> TaskShare:
         """Create a new task share"""
