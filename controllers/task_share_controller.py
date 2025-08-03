@@ -22,6 +22,13 @@ class TaskShareController:
             username = data.get('username')
             permission_level = data.get('permission_level', 'view')
             
+            # Debug logging
+            print(f"🔍 TaskShareController.share_task: Received data:")
+            print(f"  - task_id: {task_id} (type: {type(task_id)})")
+            print(f"  - username: {username} (type: {type(username)})")
+            print(f"  - permission_level: {permission_level} (type: {type(permission_level)})")
+            print(f"  - current_user_id: {current_user_id} (type: {type(current_user_id)})")
+            
             if not task_id or not username:
                 return jsonify({'error': 'Task ID and username are required'}), 400
             
