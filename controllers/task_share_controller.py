@@ -12,7 +12,7 @@ class TaskShareController:
     def share_task(self):
         """Share a task with another user"""
         try:
-            current_user_id = get_jwt_identity()
+            current_username = get_jwt_identity()
             data = request.get_json()
             
             if not data:
@@ -27,13 +27,13 @@ class TaskShareController:
             print(f"  - task_id: {task_id} (type: {type(task_id)})")
             print(f"  - recipient_identifier: {recipient_identifier} (type: {type(recipient_identifier)})")
             print(f"  - permission_level: {permission_level} (type: {type(permission_level)})")
-            print(f"  - current_user_id: {current_user_id} (type: {type(current_user_id)})")
+            print(f"  - current_username: {current_username} (type: {type(current_username)})")
             
             if not task_id or not recipient_identifier:
                 return jsonify({'error': 'Task ID and recipient identifier (username or user code) are required'}), 400
             
             success, message = self.task_share_service.share_task(
-                task_id, current_user_id, recipient_identifier, permission_level
+                task_id, current_username, recipient_identifier, permission_level
             )
             
             if success:
@@ -62,8 +62,8 @@ class TaskShareController:
     def get_task_shares(self, task_id):
         """Get all shares for a specific task (owner only)"""
         try:
-            current_user_id = get_jwt_identity()
-            shares = self.task_share_service.get_task_shares(task_id, current_user_id)
+            current_username = get_jwt_identity()
+            shares = self.task_share_service.get_task_shares(task_id, current_username)
             
             return jsonify({'shares': shares}), 200
                 
@@ -74,7 +74,7 @@ class TaskShareController:
     def update_share_permission(self, task_id):
         """Update permission level for a shared task"""
         try:
-            current_user_id = get_jwt_identity()
+            current_username = get_jwt_identity()
             data = request.get_json()
             
             if not data:
@@ -87,7 +87,7 @@ class TaskShareController:
                 return jsonify({'error': 'User code and permission level are required'}), 400
             
             success, message = self.task_share_service.update_share_permission(
-                task_id, current_user_id, user_code, permission_level
+                task_id, current_username, user_code, permission_level
             )
             
             if success:
@@ -102,7 +102,7 @@ class TaskShareController:
     def remove_share(self, task_id):
         """Remove a task share"""
         try:
-            current_user_id = get_jwt_identity()
+            current_username = get_jwt_identity()
             data = request.get_json()
             
             if not data:
@@ -114,7 +114,7 @@ class TaskShareController:
                 return jsonify({'error': 'User code is required'}), 400
             
             success, message = self.task_share_service.remove_share(
-                task_id, current_user_id, user_code
+                task_id, current_username, user_code
             )
             
             if success:

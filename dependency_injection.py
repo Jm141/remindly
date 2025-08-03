@@ -158,6 +158,7 @@ class DependencyContainer:
                 user_id INTEGER NOT NULL,
                 title TEXT NOT NULL,
                 description TEXT,
+                category TEXT,
                 due_date TIMESTAMP,
                 priority TEXT DEFAULT 'medium',
                 status TEXT,
@@ -176,6 +177,11 @@ class DependencyContainer:
         
         try:
             db.execute('ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT "medium"')
+        except:
+            pass  # Column already exists
+        
+        try:
+            db.execute('ALTER TABLE tasks ADD COLUMN category TEXT')
         except:
             pass  # Column already exists
         
@@ -209,15 +215,15 @@ class DependencyContainer:
             CREATE TABLE IF NOT EXISTS task_shares (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 task_id INTEGER NOT NULL,
-                owner_id INTEGER NOT NULL,
-                shared_with_id INTEGER NOT NULL,
+                owner_code TEXT NOT NULL,
+                shared_with_code TEXT NOT NULL,
                 permission_level TEXT DEFAULT 'view', -- 'view', 'edit', 'admin'
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
-                FOREIGN KEY (owner_id) REFERENCES users (id) ON DELETE CASCADE,
-                FOREIGN KEY (shared_with_id) REFERENCES users (id) ON DELETE CASCADE,
-                UNIQUE(task_id, shared_with_id)
+                FOREIGN KEY (owner_code) REFERENCES users (user_code) ON DELETE CASCADE,
+                FOREIGN KEY (shared_with_code) REFERENCES users (user_code) ON DELETE CASCADE,
+                UNIQUE(task_id, shared_with_code)
             )
         ''')
         

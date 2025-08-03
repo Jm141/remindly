@@ -7,8 +7,8 @@ class TaskShare:
     """Task sharing model for collaboration"""
     id: Optional[int]
     task_id: int
-    owner_id: int
-    shared_with_id: int
+    owner_code: str
+    shared_with_code: str
     permission_level: str = "view"  # 'view', 'edit', 'admin'
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
@@ -18,8 +18,8 @@ class TaskShare:
         return {
             'id': self.id,
             'task_id': self.task_id,
-            'owner_id': self.owner_id,
-            'shared_with_id': self.shared_with_id,
+            'owner_code': self.owner_code,
+            'shared_with_code': self.shared_with_code,
             'permission_level': self.permission_level,
             'created_at': self.created_at,
             'updated_at': self.updated_at
@@ -31,8 +31,8 @@ class TaskShare:
         return cls(
             id=data.get('id'),
             task_id=data['task_id'],
-            owner_id=data['owner_id'],
-            shared_with_id=data['shared_with_id'],
+            owner_code=data['owner_code'],
+            shared_with_code=data['shared_with_code'],
             permission_level=data.get('permission_level', 'view'),
             created_at=data.get('created_at'),
             updated_at=data.get('updated_at')
