@@ -106,14 +106,28 @@ class TaskShareService:
     def get_shared_tasks(self, user_id: str) -> List[Task]:
         """Get all tasks shared with a user"""
         try:
-            shared_task_ids = self.task_share_repo.get_shared_tasks_for_user(user_id)
-            shared_tasks = []
+            # Convert user_id to user_code first
+            user = self.user_repo.get_user_by_id(int(user_id))
+            if not user:
+                print(f"User with ID {user_id} not found")
+                return []
             
+            user_code = user.user_code
+            print(f"🔍 TaskShareService.get_shared_tasks: Converting user_id {user_id} to user_code {user_code}")
+            
+            shared_task_ids = self.task_share_repo.get_shared_tasks_for_user(user_code)
+            print(f"🔍 TaskShareService.get_shared_tasks: Found {len(shared_task_ids)} shared task IDs")
+            
+            shared_tasks = []
             for task_id in shared_task_ids:
                 task = self.task_repo.get_task_by_id(task_id)
                 if task:
                     shared_tasks.append(task)
+                    print(f"🔍 TaskShareService.get_shared_tasks: Added shared task {task_id} '{task.title}'")
+                else:
+                    print(f"⚠️ TaskShareService.get_shared_tasks: Task {task_id} not found")
             
+            print(f"🔍 TaskShareService.get_shared_tasks: Returning {len(shared_tasks)} shared tasks")
             return shared_tasks
             
         except Exception as e:
@@ -236,7 +250,12 @@ class TaskShareService:
                 return True
             
             # Check if task is shared with user
-            permission = self.task_share_repo.get_share_permission(int(task_id), user_id_int)
+            # Convert user_id to user_code first
+            user = self.user_repo.get_user_by_id(user_id_int)
+            if not user:
+                return False
+            
+            permission = self.task_share_repo.get_share_permission(int(task_id), user.user_code)
             return permission is not None
             
         except ValueError as e:
@@ -256,7 +275,12 @@ class TaskShareService:
                 return True
             
             # Check if user has edit permissions
-            permission = self.task_share_repo.get_share_permission(int(task_id), user_id_int)
+            # Convert user_id to user_code first
+            user = self.user_repo.get_user_by_id(user_id_int)
+            if not user:
+                return False
+            
+            permission = self.task_share_repo.get_share_permission(int(task_id), user.user_code)
             return permission in ["edit", "admin"]
             
         except ValueError as e:
