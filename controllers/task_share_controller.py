@@ -48,8 +48,14 @@ class TaskShareController:
     def get_shared_tasks(self):
         """Get all tasks shared with current user"""
         try:
-            current_user_id = get_jwt_identity()
-            shared_tasks = self.task_share_service.get_shared_tasks(current_user_id)
+            current_username = get_jwt_identity()
+            
+            # Get user by username to get their user_id
+            user = self.task_share_service.user_repo.get_user_by_username(current_username)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+            
+            shared_tasks = self.task_share_service.get_shared_tasks(str(user.id))
             
             return jsonify({
                 'shared_tasks': [task.to_dict() for task in shared_tasks]
