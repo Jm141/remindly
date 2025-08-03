@@ -40,6 +40,11 @@ class UserRepositoryInterface(ABC):
         pass
     
     @abstractmethod
+    def get_user_by_username_case_insensitive(self, username: str) -> Optional[User]:
+        """Get user by username (case-insensitive)"""
+        pass
+    
+    @abstractmethod
     def get_user_by_user_code(self, user_code: str) -> Optional[User]:
         """Get user by user_code"""
         pass
@@ -52,6 +57,11 @@ class UserRepositoryInterface(ABC):
     @abstractmethod
     def user_exists(self, username: str) -> bool:
         """Check if user exists"""
+        pass
+    
+    @abstractmethod
+    def user_exists_case_insensitive(self, username: str) -> bool:
+        """Check if user exists (case-insensitive)"""
         pass
     
     @abstractmethod

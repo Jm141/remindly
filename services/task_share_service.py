@@ -52,9 +52,14 @@ class TaskShareService:
                 recipient_user = self.user_repo.get_user_by_user_code(recipient_identifier.upper())
             
             if not recipient_user:
-                # Try as username
-                print(f"🔍 TaskShareService.share_task: Looking up recipient by username: {recipient_identifier}")
+                # Try as username (case-insensitive)
+                print(f"🔍 TaskShareService.share_task: Looking up recipient by username (case-insensitive): {recipient_identifier}")
+                # First try exact match
                 recipient_user = self.user_repo.get_user_by_username(recipient_identifier)
+                
+                # If not found, try case-insensitive search
+                if not recipient_user:
+                    recipient_user = self.user_repo.get_user_by_username_case_insensitive(recipient_identifier)
             
             if not recipient_user:
                 return False, f"User '{recipient_identifier}' not found. Please check the username or user code."

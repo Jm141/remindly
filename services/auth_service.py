@@ -25,8 +25,8 @@ class AuthService:
         if len(username) < 3:
             return False, "Username must be at least 3 characters"
         
-        # Check if user already exists
-        if self.user_repository.user_exists(username):
+        # Check if user already exists (case-insensitive)
+        if self.user_repository.user_exists(username) or self.user_repository.user_exists_case_insensitive(username):
             return False, "Username already exists"
         
         # Generate unique user code
@@ -50,7 +50,11 @@ class AuthService:
         if not username or not password:
             return None, "Username and password are required"
         
+        # Try exact match first, then case-insensitive
         user = self.user_repository.get_user_by_username(username)
+        if not user:
+            user = self.user_repository.get_user_by_username_case_insensitive(username)
+        
         if not user:
             return None, "Invalid credentials"
         

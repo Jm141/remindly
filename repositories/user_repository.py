@@ -163,3 +163,37 @@ class UserRepository(UserRepositoryInterface):
         except Exception as e:
             self.database.rollback()
             raise e 
+
+    def get_user_by_username_case_insensitive(self, username: str) -> Optional[User]:
+        """Get user by username (case-insensitive)"""
+        try:
+            cursor = self.database.cursor()
+            cursor.execute('''
+                SELECT id, user_code, username, password_hash, email, created_at, updated_at
+                FROM users WHERE LOWER(username) = LOWER(?)
+            ''', (username,))
+            
+            row = cursor.fetchone()
+            if row:
+                return User(
+                    id=row['id'],
+                    user_code=row['user_code'],
+                    username=row['username'],
+                    password_hash=row['password_hash'],
+                    email=row['email'],
+                    created_at=row['created_at'],
+                    updated_at=row['updated_at']
+                )
+            return None
+        except Exception as e:
+            raise e 
+
+    def user_exists_case_insensitive(self, username: str) -> bool:
+        """Check if user exists (case-insensitive)"""
+        try:
+            cursor = self.database.cursor()
+            cursor.execute('SELECT COUNT(*) as count FROM users WHERE LOWER(username) = LOWER(?)', (username,))
+            row = cursor.fetchone()
+            return row['count'] > 0
+        except Exception as e:
+            raise e 
