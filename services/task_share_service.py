@@ -122,8 +122,47 @@ class TaskShareService:
             for task_id in shared_task_ids:
                 task = self.task_repo.get_task_by_id_only(task_id)
                 if task:
-                    shared_tasks.append(task)
-                    print(f"🔍 TaskShareService.get_shared_tasks: Added shared task {task_id} '{task.title}'")
+                    # Get the owner's username for this task
+                    owner_user = self.user_repo.get_user_by_id(task.user_id)
+                    if owner_user:
+                        # Create a new task object with the username included
+                        task_with_username = Task(
+                            id=task.id,
+                            user_id=task.user_id,
+                            title=task.title,
+                            description=task.description,
+                            category=task.category,
+                            recurrence=task.recurrence,
+                            priority=task.priority,
+                            due_date=task.due_date,
+                            status=task.status,
+                            completed=task.completed,
+                            created_at=task.created_at,
+                            updated_at=task.updated_at,
+                            subtasks=task.subtasks,
+                            shared_by_username=owner_user.username
+                        )
+                        shared_tasks.append(task_with_username)
+                        print(f"🔍 TaskShareService.get_shared_tasks: Added shared task {task_id} '{task.title}' shared by {owner_user.username}")
+                    else:
+                        print(f"⚠️ TaskShareService.get_shared_tasks: Owner user {task.user_id} not found for task {task_id}")
+                        task_with_username = Task(
+                            id=task.id,
+                            user_id=task.user_id,
+                            title=task.title,
+                            description=task.description,
+                            category=task.category,
+                            recurrence=task.recurrence,
+                            priority=task.priority,
+                            due_date=task.due_date,
+                            status=task.status,
+                            completed=task.completed,
+                            created_at=task.created_at,
+                            updated_at=task.updated_at,
+                            subtasks=task.subtasks,
+                            shared_by_username='Unknown'
+                        )
+                        shared_tasks.append(task_with_username)
                 else:
                     print(f"⚠️ TaskShareService.get_shared_tasks: Task {task_id} not found")
             

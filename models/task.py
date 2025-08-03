@@ -54,6 +54,7 @@ class Task:
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     subtasks: List[Subtask] = field(default_factory=list)
+    shared_by_username: Optional[str] = None
     
     def to_dict(self) -> dict:
         """Convert task to dictionary"""
@@ -70,7 +71,8 @@ class Task:
             'completed': self.completed,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            'subtasks': [subtask.to_dict() for subtask in self.subtasks]
+            'subtasks': [subtask.to_dict() for subtask in self.subtasks],
+            'shared_by_username': self.shared_by_username
         }
     
     @classmethod
@@ -90,7 +92,8 @@ class Task:
             completed=data.get('completed', False),
             created_at=data.get('created_at'),
             updated_at=data.get('updated_at'),
-            subtasks=subtasks
+            subtasks=subtasks,
+            shared_by_username=data.get('shared_by_username')
         )
     
     def is_overdue(self) -> bool:
