@@ -120,7 +120,7 @@ class TaskShareService:
             
             shared_tasks = []
             for task_id in shared_task_ids:
-                task = self.task_repo.get_task_by_id(task_id)
+                task = self.task_repo.get_task_by_id_only(task_id)
                 if task:
                     shared_tasks.append(task)
                     print(f"🔍 TaskShareService.get_shared_tasks: Added shared task {task_id} '{task.title}'")
